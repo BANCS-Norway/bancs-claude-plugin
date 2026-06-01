@@ -8,7 +8,7 @@
     {
       "name": "bcp",
       "source": "./",
-      "description": "BANCS Claude Plugin — automated git-worktree handling and the Clone Force 99 mission system."
+      "description": "BANCS Claude Plugin — git-worktree handling and a mission system with swappable agent workforces."
     }
   ]
 }

@@ -2,7 +2,7 @@
   "name": "@bancs/bancs-claude-plugin",
   "version": "0.0.0",
   "private": true,
-  "description": "BANCS Claude Plugin (bcp) — automated git-worktree handling and the Clone Force 99 mission system.",
+  "description": "BANCS Claude Plugin (bcp) — git-worktree handling and a mission system with swappable agent workforces.",
   "type": "module",
   "scripts": {
     "validate": "node scripts/validate.mjs",

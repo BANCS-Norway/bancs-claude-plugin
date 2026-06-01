@@ -2,7 +2,7 @@
   "name": "bcp",
   "displayName": "BANCS Claude Plugin",
   "version": "1.0.0",
-  "description": "BANCS Claude Plugin — automated git-worktree handling and the Clone Force 99 mission system, packaged as skills, slash commands, and hooks.",
+  "description": "BANCS Claude Plugin — git-worktree handling and a mission system with swappable agent workforces (Clone Force 99 ships as the default example), packaged as skills, slash commands, and hooks.",
   "author": {
     "name": "BANCS Norway",
     "url": "https://github.com/BANCS-Norway"
