@@ -2,22 +2,22 @@
 
 ## Star Wars / The Bad Batch references
 
-This plugin includes an optional session-naming and mission-tracking theme based on
-**"Star Wars: The Bad Batch"** and the unit **"Clone Force 99."**
+The default workforce shipped with this plugin, **Clone Force 99**, is a *worked
+example* — it demonstrates how giving an agent a name and a working *style* makes a
+session more engaging and helps Claude hold a consistent approach. It is named after
+**"Star Wars: The Bad Batch."**
 
-- **"Star Wars," "The Bad Batch," "Clone Force 99,"** and the character names
-  **Hunter, Tech, Wrecker, Crosshair, Echo, Omega,** and **Rex** are trademarks and
-  copyrighted works of **The Walt Disney Company and Lucasfilm Ltd. All rights
-  reserved by their respective owners.**
-- These references are used here **purely as an affectionate, non-commercial
-  novelty** — a fun convention for naming parallel Claude Code sessions. They are
-  **not** part of the plugin's functionality and carry no commercial intent.
-- BANCS Norway is **not affiliated with, sponsored by, or endorsed by** Disney or
-  Lucasfilm, and claims **no ownership** of the referenced IP.
-- The plugin's MIT license (see [LICENSE](./LICENSE)) applies only to BANCS's own
-  original code and documentation — **not** to any third-party trademarks or
-  characters referenced herein.
+- **"Star Wars," "The Bad Batch," "Clone Force 99,"** and the names **Hunter, Tech,
+  Wrecker, Crosshair, Echo, Omega,** and **Rex** are trademarks/copyright of **The
+  Walt Disney Company and Lucasfilm Ltd. — all rights reserved by them.**
+- They are used here as an **affectionate, non-commercial reference**, to *name and
+  describe* working styles — not as code, assets, or anything sold. BANCS Norway is
+  **not affiliated with, sponsored by, or endorsed by** Disney/Lucasfilm and claims
+  **no ownership** of the IP.
+- The plugin's [MIT license](./LICENSE) covers **only BANCS's own code and docs**,
+  never the referenced names.
 
-If you prefer a neutral, IP-free experience, the theme is cosmetic: the clone names
-can be replaced with generic labels (e.g. `agent-1`, `agent-2`) without affecting
-how the worktree and mission skills work.
+**Prefer a clean slate?** A `neutral`, IP-free workforce ships alongside it, and you
+can author or pull your own — `/bcp:workforce set neutral` (see
+[WORKFORCES.md](./WORKFORCES.md)). We expect to make a higher-value roster the default
+in future.

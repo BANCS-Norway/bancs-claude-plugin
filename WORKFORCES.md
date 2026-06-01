@@ -10,6 +10,14 @@ is *active* and never hardcodes specific names.
   `workforces/index.json`.
 - **Schema:** `workforces/workforce.schema.json`.
 
+## Why give a workforce personality?
+
+Naming a member and giving it a working `style` does two things: it makes a session more
+engaging, and it helps Claude hold a consistent approach — a "surgical, minimal blast
+radius" member really does behave differently from a "bold, sweeping changes" one. Clone
+Force 99 was the exercise that taught us this; the mechanics work the same with the
+`neutral` pack or any workforce you author.
+
 ## Switching workforces
 
 ```text
@@ -27,8 +35,8 @@ Claude's `WebFetch`; private repos use `gh` if it's installed and authenticated.
 
 | id | name | notes |
 | --- | --- | --- |
-| `clone-force-99` | Clone Force 99 | Default. Star Wars / *The Bad Batch* novelty theme — Disney/Lucasfilm IP, see [DISCLAIMER.md](./DISCLAIMER.md). |
-| `neutral` | Default Agents | IP-free, same role coverage. |
+| `clone-force-99` | Clone Force 99 | **Default (worked example).** Star Wars / *The Bad Batch* names — Disney/Lucasfilm IP, see [DISCLAIMER.md](./DISCLAIMER.md). Prefer `neutral` or your own. |
+| `neutral` | Default Agents | IP-free alternative, same role coverage. |
 
 ## Authoring a workforce
 

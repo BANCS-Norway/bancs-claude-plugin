@@ -2,13 +2,13 @@
 
 The **BANCS Claude Plugin** (`bcp`) packages BANCS Norway's
 [Claude Code](https://code.claude.com/docs/en/overview) workflow: **automated
-git-worktree handling** and the **Clone Force 99 mission system**, delivered as
-skills, slash commands, and hooks.
+git-worktree handling** and a **mission system** with swappable agent workforces,
+delivered as skills, slash commands, and hooks.
 
-> **Note:** this repository carries an optional Star Wars / *The Bad Batch* naming
-> theme used purely as a non-commercial novelty. Those names are Disney/Lucasfilm
-> trademarks, all rights reserved — see [DISCLAIMER.md](./DISCLAIMER.md). Keep this
-> repo private unless the IP references are removed.
+> **Note:** the default workforce, **Clone Force 99**, is a non-commercial *example*
+> built on Star Wars / *The Bad Batch* names (Disney/Lucasfilm trademarks, all rights
+> reserved) — see [DISCLAIMER.md](./DISCLAIMER.md). Prefer a clean slate? Switch to the
+> bundled `neutral` workforce or your own with `/bcp:workforce`.
 
 ## Install
 
@@ -25,7 +25,7 @@ This repository is a single-plugin marketplace named `bancs`:
 
 | Skill | Purpose |
 | --- | --- |
-| `worktree-create` | Start fresh work on an issue: derive branch, create the worktree, label the issue, deploy a clone |
+| `worktree-create` | Start fresh work on an issue: derive branch, create the worktree, label the issue, assign a workforce member |
 | `worktree-resume` | Resume an issue after a crash/interruption when the worktree already exists |
 | `worktree-cleanup` | Tear down after a merged PR: remove worktree, delete branch, complete the mission |
 | `issues` | Session entry point: sync the issue cache and shortlist what to work on next |
@@ -52,9 +52,9 @@ manual setup, no external tools.
 
 The engine is **theme-agnostic**: it assigns issues to members of the *active
 workforce* rather than any hardcoded roster. Bundled workforces live in
-[`workforces/`](./workforces/) (`clone-force-99` is the default; `neutral` is IP-free),
-and `/bcp:workforce` switches between them or pulls one from any GitHub repo. See
-[WORKFORCES.md](./WORKFORCES.md) for the format and how to author your own.
+[`workforces/`](./workforces/) (`clone-force-99` is the default *example*; `neutral` is
+an IP-free alternative), and `/bcp:workforce` switches between them or pulls one from any
+GitHub repo. See [WORKFORCES.md](./WORKFORCES.md) for the format and how to author your own.
 
 The mission system reads/writes globally under `~/.claude/missions/` (one roster across
 all repos), so mission files carry a `**Repo:** owner/name` field to disambiguate
