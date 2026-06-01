@@ -1,0 +1,49 @@
+{
+  "name": "@bancs/bancs-claude-plugin",
+  "version": "0.0.0",
+  "private": true,
+  "description": "BANCS Claude Plugin (bcp) — automated git-worktree handling and the Clone Force 99 mission system.",
+  "type": "module",
+  "scripts": {
+    "validate": "node scripts/validate.mjs",
+    "lint": "markdownlint-cli2 '**/*.md' '#node_modules'",
+    "lint:fix": "markdownlint-cli2 --fix '**/*.md' '#node_modules'",
+    "test": "node scripts/validate.mjs",
+    "prepare": "husky"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BANCS-Norway/bancs-claude-plugin.git"
+  },
+  "keywords": [
+    "claude-code",
+    "claude-plugin",
+    "bancs"
+  ],
+  "author": "BANCS Norway",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/BANCS-Norway/bancs-claude-plugin/issues"
+  },
+  "homepage": "https://github.com/BANCS-Norway/bancs-claude-plugin#readme",
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^20.4.2",
+    "@commitlint/config-conventional": "^20.4.2",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/exec": "^7.1.0",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^12.0.6",
+    "@semantic-release/release-notes-generator": "^14.1.0",
+    "husky": "^9.0.0",
+    "lint-staged": "^15.0.0",
+    "markdownlint-cli2": "^0.22.0",
+    "semantic-release": "^25.0.3"
+  },
+  "lint-staged": {
+    "*.md": "markdownlint-cli2"
+  }
+}

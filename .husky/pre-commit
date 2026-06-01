@@ -1,0 +1,2 @@
+CI=true npx lint-staged
+node scripts/validate.mjs

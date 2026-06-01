@@ -1,0 +1,20 @@
+{
+  "$schema": "./workforce.schema.json",
+  "default": "clone-force-99",
+  "workforces": [
+    {
+      "id": "clone-force-99",
+      "file": "clone-force-99.json",
+      "name": "Clone Force 99",
+      "description": "Star Wars: The Bad Batch squad — novelty theme. References Disney/Lucasfilm IP; see DISCLAIMER.md.",
+      "private": true
+    },
+    {
+      "id": "neutral",
+      "file": "neutral.json",
+      "name": "Default Agents",
+      "description": "IP-free generic roster with the same role coverage as the themed packs.",
+      "private": false
+    }
+  ]
+}

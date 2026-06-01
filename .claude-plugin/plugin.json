@@ -1,0 +1,23 @@
+{
+  "name": "bcp",
+  "displayName": "BANCS Claude Plugin",
+  "version": "0.0.0",
+  "description": "BANCS Claude Plugin — automated git-worktree handling and the Clone Force 99 mission system, packaged as skills, slash commands, and hooks.",
+  "author": {
+    "name": "BANCS Norway",
+    "url": "https://github.com/BANCS-Norway"
+  },
+  "homepage": "https://github.com/BANCS-Norway/bancs-claude-plugin#readme",
+  "repository": "https://github.com/BANCS-Norway/bancs-claude-plugin",
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "claude-plugin",
+    "bancs"
+  ],
+  "commands": [
+    "./commands/"
+  ],
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json"
+}

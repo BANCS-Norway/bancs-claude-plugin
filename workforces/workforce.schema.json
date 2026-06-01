@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/BANCS-Norway/bancs-claude-plugin/workforces/workforce.schema.json",
+  "title": "bcp workforce / workforce index",
+  "oneOf": [
+    {
+      "title": "Workforce roster",
+      "type": "object",
+      "required": ["id", "name", "members"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "private": { "type": "boolean" },
+        "notice": { "type": "string" },
+        "members": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["id", "label", "bestFor", "style"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+              "label": { "type": "string" },
+              "designation": { "type": "string" },
+              "role": { "type": "string" },
+              "bestFor": { "type": "string" },
+              "deployPhrase": { "type": "string" },
+              "motto": { "type": "string" },
+              "style": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "Workforce index",
+      "type": "object",
+      "required": ["default", "workforces"],
+      "properties": {
+        "default": { "type": "string" },
+        "workforces": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["id", "file"],
+            "properties": {
+              "id": { "type": "string" },
+              "file": { "type": "string" },
+              "name": { "type": "string" },
+              "description": { "type": "string" },
+              "private": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

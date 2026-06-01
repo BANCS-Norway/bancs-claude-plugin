@@ -1,0 +1,14 @@
+{
+  "name": "bancs",
+  "owner": {
+    "name": "BANCS Norway"
+  },
+  "description": "BANCS Norway's Claude Code plugin marketplace.",
+  "plugins": [
+    {
+      "name": "bcp",
+      "source": "./",
+      "description": "BANCS Claude Plugin — automated git-worktree handling and the Clone Force 99 mission system."
+    }
+  ]
+}
