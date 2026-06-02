@@ -100,6 +100,36 @@ fi
 
 Skip silently if direnv is not installed or `.envrc` is absent.
 
+## Bootstrap dependencies in the new worktree (if applicable)
+
+A fresh worktree has no installed dependencies, so git hooks (husky / lint-staged) and
+project scripts won't run until they're available. For a **Node** project with a
+`package.json` and a lockfile, make `node_modules` available: symlink the main checkout's
+if it exists
+(instant, and correct when the branch's deps match `main` — the common case), otherwise
+run a clean install. Then exclude it worktree-locally so it's never committed — the
+`node_modules/` `.gitignore` pattern does **not** match a symlink.
+
+```bash
+WT=.worktrees/{type}-{NNN}-{slug}
+if [ -f "$WT/package.json" ] && [ -f "$WT/package-lock.json" ]; then
+  if [ ! -e "$WT/node_modules" ]; then
+    if [ -d node_modules ]; then
+      ln -s ../../node_modules "$WT/node_modules"   # share the main checkout's install
+    else
+      (cd "$WT" && npm ci)                          # nothing to borrow — clean install
+    fi
+  fi
+  # never commit node_modules from the worktree (a symlink isn't matched by `node_modules/`)
+  ( cd "$WT" && excl="$(git rev-parse --git-path info/exclude)" \
+    && { grep -qxF 'node_modules' "$excl" 2>/dev/null || echo 'node_modules' >> "$excl"; } )
+fi
+```
+
+Skip silently if there's no `package.json` + lockfile. Other ecosystems: the direnv step
+above covers shared-env setups (e.g. a uv venv); extend this step for yarn/pnpm or
+non-Node tooling as needed.
+
 ## Label the issue in-progress
 
 ```bash
