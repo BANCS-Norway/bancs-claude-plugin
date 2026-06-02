@@ -134,7 +134,12 @@ If no mission file exists, skip silently.
 
 ## Final checklist sync
 
-Before declaring done, ensure the issue body's checklist section matches local `CHECKLIST.md`. Same mechanism as `commit-guide` *Update the checklist and sync to GitHub* — replace the section between `<!-- checklist:start -->` / `<!-- checklist:end -->` markers and write the body back via `gh issue edit {NNN} --body-file -`.
+Before declaring done, flush local `CHECKLIST.md` to the issue body with the helper
+(replaces only the marked section):
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/checklist-sync.mjs" {NNN}
+```
 
 If unchecked items remain that *should* have been done as part of this PR, flag them to the user before confirming — it's their call whether to land the PR with open items or finish them first.
 

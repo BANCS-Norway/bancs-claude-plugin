@@ -132,13 +132,11 @@ Items resolved by this batch?
 Tick, strike-through (~~item~~ for descope), or add new items.
 ```
 
-After edits, flush to the issue body — replace only the section between `<!-- checklist:start -->` and `<!-- checklist:end -->`:
+After edits, flush `CHECKLIST.md` to the issue body — the helper replaces only the
+section between `<!-- checklist:start -->` and `<!-- checklist:end -->`:
 
 ```bash
-# 1. fetch current body, 2. swap the marked section with CHECKLIST.md contents, 3. write back
-gh issue view {NNN} --json body --jq '.body' > /tmp/body.md
-# substitute the block, then:
-gh issue edit {NNN} --body-file /tmp/body.md
+node "${CLAUDE_PLUGIN_ROOT}/scripts/checklist-sync.mjs" {NNN}
 ```
 
 For any items that became `~~struck~~` in this batch, post a one-line comment explaining why (the audit trail lives in comments, not the body):

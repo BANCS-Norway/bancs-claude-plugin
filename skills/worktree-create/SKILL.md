@@ -262,10 +262,13 @@ Mark the file untracked via the worktree-local exclude (no change to the repo's 
 echo 'CHECKLIST.md' >> "$(git rev-parse --git-path info/exclude)"
 ```
 
-If the issue body has no markers yet, edit it once to wrap the existing/derived checklist between `<!-- checklist:start -->` and `<!-- checklist:end -->`. From now on, only the section between markers is touched.
+If the issue body has no markers yet, seed them — run the helper, which wraps the issue
+body's existing checkbox list between `<!-- checklist:start -->` and `<!-- checklist:end -->`
+(and is robust against prose that merely mentions the markers). From then on, only the
+marked section is touched.
 
 ```bash
-gh issue edit {NNN} --body-file -   # body contents on stdin
+node "${CLAUDE_PLUGIN_ROOT}/scripts/checklist-sync.mjs" {NNN}
 ```
 
 ## Activate the member

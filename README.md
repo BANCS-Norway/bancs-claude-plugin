@@ -75,6 +75,14 @@ WORKFORCES.md          # workforce format + authoring guide
 DISCLAIMER.md          # IP / trademark notice
 ```
 
+### Scripts
+
+| Script | Purpose |
+| --- | --- |
+| `scripts/checklist-sync.mjs <issue> [path]` | Seed or sync a worktree's `CHECKLIST.md` into an issue body's `<!-- checklist:start/end -->` block (via `gh`). Used by `worktree-create`, `commit-guide`, `pr-create`. |
+| `scripts/session-start.sh` | `SessionStart` hook — seeds the default workforce |
+| `scripts/validate.mjs`, `scripts/set-version.mjs` | dev/CI only (manifest validation; release version sync) |
+
 ## Development
 
 ```bash
