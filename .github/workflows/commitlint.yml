@@ -2,7 +2,10 @@ name: Commitlint
 
 on:
   pull_request:
-    types: [opened, edited, synchronize, reopened]
+    # No `edited`: title/body edits never change commits, and editing a merged PR
+    # would re-run this against an invalid SHA range (see #7). pr-title-check keeps
+    # `edited` because it validates the title.
+    types: [opened, synchronize, reopened]
 
 jobs:
   commitlint:
