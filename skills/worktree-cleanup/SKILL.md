@@ -22,11 +22,12 @@ Present the most recently merged PR and ask if that's the one.
 
 ## Load the issue work log
 
-Read `~/.claude/projects/{project-slug}/memory/issue-{NNN}.md`
+Read `~/.claude/projects/{project-slug}/memory/issues/{NNN}/log.md` (fall back to the legacy
+flat `memory/issue-{NNN}.md` for worktrees created before the per-issue-folder change).
 
 Extract branch name and worktree path for the cleanup commands.
 
-If no work log exists, derive from the issues cache or ask the user.
+If no work log exists, derive from GitHub (`gh issue/pr view`) or ask the user.
 
 ## Verify issue and PR state
 
@@ -177,13 +178,17 @@ EOF
 
 ## Remove the issue work log
 
-Remove `~/.claude/projects/{project-slug}/memory/issue-{NNN}.md`
+Remove the whole per-issue folder — it's single-writer, so this touches nothing shared:
 
-Remove the pointer from `MEMORY.md`:
+```bash
+rm -rf ~/.claude/projects/{project-slug}/memory/issues/{NNN}
+```
 
-```
-- [issue-{NNN}](issue-{NNN}.md) — Active: ...
-```
+Also remove the legacy flat file if it exists (pre-folder worktrees):
+`rm -f ~/.claude/projects/{project-slug}/memory/issue-{NNN}.md`
+
+No `MEMORY.md` edit is needed — active work was never pointered there; the folder *was* the
+index, and removing it drops the issue from the next `issues` scan.
 
 ## Issue cache — nothing to do
 

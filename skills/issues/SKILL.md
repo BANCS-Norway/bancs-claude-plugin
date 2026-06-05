@@ -34,13 +34,25 @@ Read the existing `project_issues.md` and check `Last synced` date.
 - **Rebuild the entire Recent/Medium tables from those two fetches** — do not diff against the
   old file or selectively add/remove rows. The open-issue fetch *is* the set; anything not in it
   is closed and simply absent from the new render.
-- Set `Last synced` to today and overwrite the file.
+- Set `Last synced` to today and **write the file atomically** — render to a temp file, then
+  rename it over `project_issues.md`. This way two clones regenerating at the same instant can't
+  corrupt the file mid-write; the content is identical, so last-writer-wins simply converges.
+
+`Last synced` lives in this render as metadata about it — it is **not precious state**. If the
+file is ever lost or clobbered, the only cost is the next session does a redundant `gh` fetch,
+never a correctness loss.
 
 **If already today:** Skip the rebuild, use the existing render.
 
 ## Step 3 — Check for active work logs
 
-Scan the memory directory for `issue-*.md` files. These are issues with active worktrees from previous sessions. Note them — they take priority in the assessment.
+Scan `memory/issues/` — each subfolder `memory/issues/<N>/` is an issue with an active worktree
+from a previous session. **The directory listing is the index of active work** (there is no
+shared index file to read). Read each `memory/issues/<N>/log.md` for context. Note them — they
+take priority in the assessment.
+
+(Legacy: also pick up any flat `memory/issue-*.md` files from before the per-issue-folder
+change, and treat them the same.)
 
 Also run `git worktree list` to see what worktrees currently exist.
 
