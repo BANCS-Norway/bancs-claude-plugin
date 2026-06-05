@@ -1,3 +1,11 @@
+## [1.0.3](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.0.2...v1.0.3) (2026-06-05)
+
+
+### Bug Fixes
+
+* **issues:** make project_issues cache a render, not a hand-edited store ([dcc213c](https://github.com/BANCS-Norway/bancs-claude-plugin/commit/dcc213cac5cfdab97818f9806539efc54dbdc561)), closes [#14](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/14)
+* **skills:** move per-issue work logs into memory/issues/<N>/ folders ([fecba92](https://github.com/BANCS-Norway/bancs-claude-plugin/commit/fecba9219e966c52023997a0d601ba1ab5aeb797)), closes [#14](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/14)
+
 ## [1.0.2](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.0.1...v1.0.2) (2026-06-05)
 
 
