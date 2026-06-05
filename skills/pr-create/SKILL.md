@@ -85,17 +85,12 @@ EOF
 
 Capture the PR URL and number from the output.
 
-## Update the issue cache
+## Issue cache — nothing to do
 
-Read `~/.claude/projects/{project-slug}/memory/project_issues.md`
-
-Find the row for issue #{NNN} and update the `PR?` column:
-
-```
-— → [#{PR-number}]({PR-url})
-```
-
-Save the file.
+`project_issues.md` is a disposable render of GitHub state, not a store — do **not** hand-edit
+the `PR?` column. The PR you just opened is linked on GitHub via `Closes #{NNN}`, so the next
+`issues` sync regenerates the render with the link already present. Hand-editing it would only
+reintroduce the shared-write race this design removes.
 
 ## Update the issue work log
 

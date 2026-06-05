@@ -185,9 +185,11 @@ Remove the pointer from `MEMORY.md`:
 - [issue-{NNN}](issue-{NNN}.md) — Active: ...
 ```
 
-## Remove from issue cache
+## Issue cache — nothing to do
 
-Read `~/.claude/projects/{project-slug}/memory/project_issues.md` and remove the row for issue #{NNN}.
+`project_issues.md` is a disposable render of GitHub state — do **not** hand-remove the row.
+The PR merge already closed the issue on GitHub, so the next `issues` sync regenerates the
+render without it. Hand-editing would only reintroduce the shared-write race this design removes.
 
 ## Confirm
 
@@ -199,7 +201,7 @@ Cleaned up #NNN.
   ✓ Issue labels updated
   ✓ PR test plan checked off
   ✓ Work log removed
-  ✓ Issue cache updated
+  ✓ Issue cache — render refreshes from GitHub on next sync
   ✓ Mission complete
 
 Back on main. What's next?
