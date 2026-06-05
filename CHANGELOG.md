@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.0.1...v1.0.2) (2026-06-05)
+
+
+### Bug Fixes
+
+* **plugin:** remove redundant hooks declaration from manifest ([1c605d1](https://github.com/BANCS-Norway/bancs-claude-plugin/commit/1c605d1bb2320b45d616fba8641f705c28f592a3)), closes [#15](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/15)
+
 ## [1.0.1](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.0.0...v1.0.1) (2026-06-02)
 
 
