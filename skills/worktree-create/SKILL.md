@@ -201,14 +201,20 @@ The mission directory is the member's `id` from the active workforce (e.g. `tech
 
 ## Create the issue work log
 
-Create `~/.claude/projects/{project-slug}/memory/issue-{NNN}.md`:
+Each issue gets its own folder — `memory/issues/{NNN}/` — holding the work log and any
+per-issue memories. The folder is **single-writer** (this clone), so it never collides with
+other clones, and the *set of folders* is the index of active work (no shared index file).
+
+Create the folder and its log:
+
+```bash
+mkdir -p ~/.claude/projects/{project-slug}/memory/issues/{NNN}
+```
+
+Create `~/.claude/projects/{project-slug}/memory/issues/{NNN}/log.md`:
 
 ```markdown
----
-name: issue-{NNN}
-type: project
-description: Active work log for #NNN — {issue title}
----
+# Work log — #{NNN}: {issue title}
 
 **Issue:** [#{NNN}]({issue-url})
 **Member:** {member.label}
@@ -232,11 +238,10 @@ Fresh start — no batches committed yet.
 <!-- anything worth remembering for the next session -->
 ```
 
-Also add a pointer to `MEMORY.md`:
-
-```
-- [issue-{NNN}](issue-{NNN}.md) — Active: {issue title}
-```
+Do **not** add a pointer to `MEMORY.md`. The folder `memory/issues/{NNN}/` is itself the index
+of active work — the `issues` skill surfaces it by scanning `memory/issues/` at session start.
+Keeping active-work tracking out of `MEMORY.md` means the issue skills never write that shared
+file, so parallel clones never contend on it.
 
 ## Seed the local checklist
 

@@ -10,7 +10,7 @@ The branch is pushed. You create the PR, update the issue cache, and update the 
 
 ## Load context
 
-Read the issue work log: `~/.claude/projects/{project-slug}/memory/issue-{NNN}.md`
+Read the issue work log: `~/.claude/projects/{project-slug}/memory/issues/{NNN}/log.md`
 
 Extract:
 
@@ -94,7 +94,7 @@ reintroduce the shared-write race this design removes.
 
 ## Update the issue work log
 
-Add to `issue-{NNN}.md`:
+Add to `memory/issues/{NNN}/log.md`:
 
 ```markdown
 ## PR

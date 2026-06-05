@@ -105,7 +105,7 @@ EOF
 
 ## Update the issue work log
 
-Append to `~/.claude/projects/{project-slug}/memory/issue-{NNN}.md`:
+Append to `~/.claude/projects/{project-slug}/memory/issues/{NNN}/log.md`:
 
 Under `## Batches`, add:
 
