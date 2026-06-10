@@ -1,7 +1,7 @@
 // Tests for the shared hook helper and the SessionStart hook. Run: npm test
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, openSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -121,4 +121,82 @@ test('session-start exits 0 on an unreadable or unsafe index', () => {
     assert.equal(runHook(fx).status, 0, index);
     assert.equal(existsSync(activeFile(fx.home)), false, index);
   }
+});
+
+// --- memory-lock.mjs: serialize MEMORY.md writes ---
+
+function lockFixture() {
+  const dir = tmp();
+  return { dir, memory: join(dir, 'MEMORY.md'), lock: join(dir, 'MEMORY.md.lock') };
+}
+
+function runLock(mode, filePath, env = {}, extra = {}) {
+  return spawnSync(process.execPath, [resolve(scripts, 'memory-lock.mjs'), mode], {
+    input: JSON.stringify({ hook_event_name: 'PreToolUse', session_id: 's1', tool_input: { file_path: filePath }, ...extra }),
+    encoding: 'utf8',
+    env: { PATH: process.env.PATH, BCP_MEMORY_LOCK_TIMEOUT: '0', ...env },
+  });
+}
+
+test('memory-lock acquire takes the lock and records the holder', () => {
+  const fx = lockFixture();
+  const r = runLock('acquire', fx.memory, { BCP_CLONE: 'echo' });
+  assert.equal(r.status, 0);
+  assert.equal(r.stdout, '');
+  const holder = readFileSync(join(fx.lock, 'holder'), 'utf8');
+  assert.match(holder, /clone=echo/);
+  assert.match(holder, /session=s1/);
+});
+
+test('memory-lock release clears the lock', () => {
+  const fx = lockFixture();
+  runLock('acquire', fx.memory);
+  assert.equal(runLock('release', fx.memory).status, 0);
+  assert.equal(existsSync(fx.lock), false);
+});
+
+test('memory-lock asks the human when the lock is held past the timeout', () => {
+  const fx = lockFixture();
+  runLock('acquire', fx.memory, { BCP_CLONE: 'first' });
+  const r = runLock('acquire', fx.memory);
+  assert.equal(r.status, 0);
+  const out = JSON.parse(r.stdout).hookSpecificOutput;
+  assert.equal(out.hookEventName, 'PreToolUse');
+  assert.equal(out.permissionDecision, 'ask');
+  assert.match(out.permissionDecisionReason, /clone=first/);
+  assert.equal(existsSync(fx.lock), true); // never broken without approval
+});
+
+test('memory-lock waits for a holder that releases within the timeout', async () => {
+  const fx = lockFixture();
+  runLock('acquire', fx.memory);
+  const waiter = spawn(process.execPath, [resolve(scripts, 'memory-lock.mjs'), 'acquire'], {
+    env: { PATH: process.env.PATH, BCP_MEMORY_LOCK_TIMEOUT: '5' },
+  });
+  let stdout = '';
+  waiter.stdout.on('data', (d) => (stdout += d));
+  waiter.stdin.end(JSON.stringify({ tool_input: { file_path: fx.memory } }));
+  await new Promise((r) => setTimeout(r, 400));
+  runLock('release', fx.memory);
+  await new Promise((r) => waiter.on('close', r));
+  assert.equal(stdout, ''); // acquired without asking
+  assert.equal(existsSync(join(fx.lock, 'holder')), true); // the waiter now holds it
+});
+
+test('memory-lock ignores other files, other modes and unreadable payloads', () => {
+  const fx = lockFixture();
+  assert.equal(runLock('acquire', join(fx.dir, 'README.md')).status, 0);
+  assert.equal(existsSync(fx.lock), false);
+  assert.equal(runLock('bogus', fx.memory).status, 0);
+  assert.equal(existsSync(fx.lock), false);
+  const bad = spawnSync(process.execPath, [resolve(scripts, 'memory-lock.mjs'), 'acquire'], { input: 'not json', encoding: 'utf8' });
+  assert.equal(bad.status, 0);
+});
+
+test('memory-lock matches Windows-style paths', () => {
+  const fx = lockFixture();
+  const r = runLock('acquire', fx.memory.replaceAll('/', '\\'));
+  assert.equal(r.status, 0);
+  // On POSIX the backslash path is one odd directory name; the point is it passed the filter.
+  assert.equal(r.stdout, '');
 });
