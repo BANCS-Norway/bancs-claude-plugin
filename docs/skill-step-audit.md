@@ -13,7 +13,7 @@ One row per step across the 8 skills, 3 commands and the hook (bcp v1.0.3). Outp
 
 A step that mixes owners is split into separate rows. Each row has exactly one owner.
 
-**Native overlap** — what Claude Code already does. A claim prefixed `unverified:` is recalled, not checked; #26 checks every shim claim against the docs and adds links and `retire-when`. Unprefixed claims come from the review brief or are plain absence.
+**Native overlap** — what Claude Code already does. Rows that touch a native feature carry only the verdict (`YES`, `PARTIAL`, `NO`, `CANNOT-CONFIRM`); the evidence, docs links and `retire-when` are in [native-overlap.md](native-overlap.md), the single place each verdict is written out. `None` means no native feature touches the step.
 
 **Action** — `keep` · `slim` (shorten or replace part) · `retire` · `move` (to repo conventions) · `enforce` (hook or CI instead of prose).
 
@@ -28,11 +28,11 @@ The last column names the issue that carries the change, where one exists.
 | WC3 | Map labels to branch type; `.github/` override | convention | None | move | #42 |
 | WC4 | Slug rules, `{type}/{NNN}_{slug}` naming | convention | None | move | #42 |
 | WC5 | Confirm names with the user | process | None | keep | |
-| WC6a | `git worktree add` | shim | `--worktree`, subagent `isolation: worktree` | slim | #37 |
+| WC6a | `git worktree add` | shim | PARTIAL; see native-overlap.md, WC6a | slim | #37 |
 | WC6b | Worktree location `.worktrees/` | convention | `.claude/worktrees/` is the native location | move | #37 decides `.worktrees/` vs native path |
 | WC7 | Branch from hard-coded `main` | convention | Default branch is available from git | move | #42 |
 | WC8 | `direnv allow` in the new worktree | convention | None | move | #42. Only applies where `.envrc` exists. |
-| WC9 | Symlink `node_modules` or `npm ci` | shim | `.worktreeinclude` (copy of ignored files; symlinks via `# link:` per the brief) | slim | #37. Node-only. |
+| WC9 | Symlink `node_modules` or `npm ci` | shim | PARTIAL; see native-overlap.md, WC9 | slim | #37. Node-only. |
 | WC10 | Add label `status: in progress` | convention | None | move | #42. Label name is repo-specific. |
 | WC11 | Create mission file | process | None | keep | Overlaps WC12 in content (objective, progress). Revisit with #40. |
 | WC12 | Create `memory/issues/{NNN}/log.md` | process | Claude Code project memory shares the same folder | move | #40 |
@@ -40,7 +40,7 @@ The last column names the issue that carries the change, where one exists.
 | WC14 | Wrap issue-body checklist in markers (`checklist-sync.mjs`) | process | None | keep | |
 | WC15 | Activate member style | process | None | keep | |
 | WC16 | "Ready" confirmation | process | None | keep | |
-| WC17 | Trigger: phrases ("let's do #215") | process | unverified: skill descriptions load natively | keep | #43 tags the skill |
+| WC17 | Trigger: phrases ("let's do #215") | process | YES; see native-overlap.md, WC17 | keep | #43 tags the skill |
 
 ## `worktree-resume`
 
@@ -53,7 +53,7 @@ The last column names the issue that carries the change, where one exists.
 | WR5 | Activate member (cache as fallback) | process | None | slim | Cache never holds the member; drop the fallback. |
 | WR6 | Brief the user | process | None | keep | |
 | WR7 | Update `Current State` in the work log | process | None | enforce | #31 |
-| WR8 | Trigger: phrases ("resume #NNN") | process | unverified: native `--resume` / `--continue` restore a conversation, not issue state | keep | #43 |
+| WR8 | Trigger: phrases ("resume #NNN") | process | PARTIAL; see native-overlap.md, WR8 | keep | #43 |
 
 ## `worktree-cleanup`
 
@@ -63,10 +63,10 @@ The last column names the issue that carries the change, where one exists.
 | WX2 | Load work log, legacy fallback | process | None | move | #40. Legacy fallback must keep working. |
 | WX3 | Verify issue and PR state on inconsistency | process | None | keep | |
 | WX4 | Detect resume mode (worktree/branch already gone) | process | None | keep | |
-| WX5a | Warn about uncommitted changes before removal | shim | unverified: native exit prompt covers dirty-worktree removal | slim | #38 |
+| WX5a | Warn about uncommitted changes before removal | shim | PARTIAL; see native-overlap.md, WX5a | slim | #38 |
 | WX5b | Audit `CHECKLIST.md` for unresolved items, wait for confirmation | process | None | keep | |
-| WX6 | `git worktree remove` | shim | unverified: native worktree cleanup (partial) | slim | #38 |
-| WX7 | `git branch -d`, `-D` after PR check | shim | unverified: native worktree cleanup (partial) | slim | #38 |
+| WX6 | `git worktree remove` | shim | PARTIAL; see native-overlap.md, WX6 | slim | #38 |
+| WX7 | `git branch -d`, `-D` after PR check | shim | PARTIAL; see native-overlap.md, WX7 | slim | #38 |
 | WX8 | Remove label `status: in progress` | convention | None | move | #42 |
 | WX9 | Verify the issue closed, leave it open if not | process | None | keep | |
 | WX10 | Complete mission and move to `done/` | process | None | keep | |
@@ -80,14 +80,14 @@ The last column names the issue that carries the change, where one exists.
 
 | ID | Step | Owner | Native overlap | Action | Issue / note |
 | --- | --- | --- | --- | --- | --- |
-| CG1 | `git diff`, `git diff --staged`, `git status` | shim | unverified: native commit flow reads the same | slim | |
+| CG1 | `git diff`, `git diff --staged`, `git status` | shim | PARTIAL; see native-overlap.md, CG1 | slim |  |
 | CG2 | Commit types (`feat`, `fix`, `style`, ...) | convention | None | move | #41 reads commitlint / release config |
 | CG3 | Version-bump table "VitePress site changes only" | convention | None | move | #41, closes #22. Describes another repo's site; bcp uses semantic-release. |
 | CG4 | Optional scope | convention | None | move | #41 |
 | CG5 | Message body, `Part of #{NNN}` trailer | convention | None | move | #41 |
-| CG6 | Hard-coded `Generated with Claude Code` / `Co-Authored-By` footer | shim | unverified: native attribution setting | retire | Conflicts with the attribution the harness supplies. |
+| CG6 | Hard-coded `Generated with Claude Code` / `Co-Authored-By` footer | shim | YES; see native-overlap.md, CG6 | retire | Conflicts with the attribution the harness supplies. |
 | CG7 | Show proposal, wait for approval | process | None | keep | Human approves every commit. |
-| CG8 | `git add` and `git commit` | shim | unverified: native commit flow | slim | |
+| CG8 | `git add` and `git commit` | shim | PARTIAL; see native-overlap.md, CG8 | slim |  |
 | CG9 | Append batch to the work log | process | None | enforce | #31 |
 | CG10 | Ask which checklist items resolved, sync to issue body | process | None | keep | |
 | CG11 | Comment on the issue for descoped items | process | None | enforce | #32 |
@@ -104,7 +104,7 @@ The last column names the issue that carries the change, where one exists.
 | IS5 | Present shortlist, wait for the pick | process | None | keep | |
 | IS6 | New issue: regenerate the render, leave `Last synced` | process | None | keep | |
 | IS7 | Member roster (hard-coded Clone Force 99 list) | process | None | slim | Duplicates `workforces/clone-force-99.json`; the two can drift. |
-| IS8 | Trigger: "auto-trigger at session start" | process | unverified: `SessionStart` hook can run it | enforce | #47. Today it is prose only. |
+| IS8 | Trigger: "auto-trigger at session start" | process | NO; see native-overlap.md, IS8 | enforce | #47. Today it is prose only. |
 
 ## `pr-create`
 
@@ -113,9 +113,9 @@ The last column names the issue that carries the change, where one exists.
 | PR1 | Load work log; read labels and description from the cache | process | None | slim | The cache holds neither. Read from `gh`. |
 | PR2 | Title `{type}({scope}): ...` and type precedence | convention | None | move | #42 |
 | PR3 | Body: `Closes #`, Summary, Test plan | convention | None | move | #42 |
-| PR4 | Hard-coded `Generated with Claude Code` footer | shim | unverified: native attribution setting | retire | |
+| PR4 | Hard-coded `Generated with Claude Code` footer | shim | YES; see native-overlap.md, PR4 | retire |  |
 | PR5 | Show proposal, wait for confirmation | process | None | keep | |
-| PR6 | `cd` into the worktree, `gh pr create` | shim | unverified: native PR creation via `gh` | slim | Only the `cd` guard is bcp-specific. |
+| PR6 | `cd` into the worktree, `gh pr create` | shim | PARTIAL; see native-overlap.md, PR6 | slim | Only the `cd` guard is bcp-specific. |
 | PR7 | "Issue cache — nothing to do" section | process | None | retire | Same as WX13. |
 | PR8 | Append `## PR` to the work log | process | None | enforce | #31 |
 | PR9 | Update mission file | process | None | keep | |
@@ -129,11 +129,11 @@ The last column names the issue that carries the change, where one exists.
 | ID | Step | Owner | Native overlap | Action | Issue / note |
 | --- | --- | --- | --- | --- | --- |
 | RV1 | Skip rule for trivial batches | process | None | keep | |
-| RV2 | Phase 1: read the full diff | process | unverified: native `/review` reads a diff | keep | |
+| RV2 | Phase 1: read the full diff | process | YES; see native-overlap.md, RV2 | keep |  |
 | RV3 | Phase 2: Rich Hickey lens | process | None | keep | Personal process; stays. |
 | RV4 | Phase 3: recommendations with effort | process | None | keep | |
 | RV5 | Phase 4: one final line | process | None | keep | |
-| RV6 | Name and invocation (`/review`, self-invoked before commit) | process | Name collides with native `/review` | keep | #39 decides rename. Nothing makes the member run it. |
+| RV6 | Name and invocation (`/review`, self-invoked before commit) | process | NO collision; see native-overlap.md, RV6 | keep | #39 decides rename. Nothing makes the member run it. |
 
 ## `setup-contribution`
 
@@ -165,8 +165,8 @@ The last column names the issue that carries the change, where one exists.
 
 | ID | Step | Owner | Native overlap | Action | Issue / note |
 | --- | --- | --- | --- | --- | --- |
-| HK1 | `SessionStart`: seed `~/.claude/bcp/workforce.json` from the bundled default | shim | Verify in #26 whether plugin data storage covers this | keep | #28 ports it to `.mjs`; #35 extends it with the version compare. |
-| HK2 | Drain the stdin payload | shim | None | keep | #28 replaces it with a shared payload helper. |
+| HK1 | `SessionStart`: seed `~/.claude/bcp/workforce.json` from the bundled default | shim | NO; see native-overlap.md, HK1 | keep | #28 ports it to `.mjs`; #35 extends it with the version compare. |
+| HK2 | Drain the stdin payload | shim | NO; see native-overlap.md, HK2 | keep | #28 replaces it with a shared payload helper. |
 
 ## Not steps, but missing
 
