@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.0.3...v1.1.0) (2026-11-09)
+
+
+### Features
+
+* **validate:** enforce skill frontmatter contract (kind, fills-gap, retire-when, checked) ([eb05cab](https://github.com/BANCS-Norway/bancs-claude-plugin/commit/eb05cab5eeb085da131f540405f48d9361e70740)), closes [#43](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/43) [#30](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/30)
+
 ## [1.0.3](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.0.2...v1.0.3) (2026-06-05)
 
 
