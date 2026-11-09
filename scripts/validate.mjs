@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 // CI-safe plugin validation: parse the manifests and check required fields and
 // referenced paths exist. Does not require the `claude` CLI to be installed.
-import { readFile, access } from 'node:fs/promises';
+import { readFile, readdir, access } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { checkSkillFrontmatter } from './lib/skill-frontmatter.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const errors = [];
@@ -57,6 +58,18 @@ for (const [event, groups] of Object.entries(hooksFile?.hooks ?? {})) {
       errors.push(`hooks/hooks.json: ${event} script does not exist: ${m[1]}`);
     }
   }
+}
+
+// --- skills: frontmatter contract (docs/skill-frontmatter.md) ---
+const skillDirs = await readdir(resolve(root, 'skills'), { withFileTypes: true }).catch(() => {
+  errors.push('skills/: directory does not exist');
+  return [];
+});
+for (const dir of skillDirs) {
+  if (!dir.isDirectory()) continue;
+  const rel = `skills/${dir.name}/SKILL.md`;
+  if (!(await exists(rel))) { errors.push(`${rel}: does not exist`); continue; }
+  errors.push(...checkSkillFrontmatter(rel, await readFile(resolve(root, rel), 'utf8')));
 }
 
 // --- workforces ---
