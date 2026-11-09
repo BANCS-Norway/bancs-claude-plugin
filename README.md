@@ -44,9 +44,10 @@ This repository is a single-plugin marketplace named `bancs`:
 
 ### Hooks (`hooks/hooks.json`)
 
-A `SessionStart` hook (`scripts/session-start.sh`) seeds the default workforce to
+A `SessionStart` hook (`scripts/session-start.mjs`) seeds the default workforce to
 `~/.claude/bcp/workforce.json` on first run, so the engine always has a roster — no
-manual setup, no external tools.
+manual setup, no external tools. Hooks are Node `.mjs` scripts that filter first and share
+one payload helper; see [docs/hook-conventions.md](./docs/hook-conventions.md) before adding one.
 
 ### Workforces
 
@@ -80,14 +81,15 @@ DISCLAIMER.md          # IP / trademark notice
 | Script | Purpose |
 | --- | --- |
 | `scripts/checklist-sync.mjs <issue> [path]` | Seed or sync a worktree's `CHECKLIST.md` into an issue body's `<!-- checklist:start/end -->` block (via `gh`). Used by `worktree-create`, `commit-guide`, `pr-create`. |
-| `scripts/session-start.sh` | `SessionStart` hook — seeds the default workforce |
-| `scripts/validate.mjs`, `scripts/set-version.mjs` | dev/CI only (manifest validation; release version sync) |
+| `scripts/session-start.mjs`, `scripts/lib/hook.mjs` | `SessionStart` hook — seeds the default workforce; shared hook payload helper |
+| `scripts/validate.mjs`, `scripts/set-version.mjs`, `scripts/hooks.test.mjs` | dev/CI only (manifest and hook validation; release version sync; hook tests) |
 
 ## Development
 
 ```bash
 npm install        # sets up git hooks via husky
-npm run validate   # check the manifests and referenced paths
+npm run validate   # check the manifests, hooks and referenced paths
+npm test           # validate + hook tests (`npm run test:hooks` alone)
 npm run lint       # markdownlint
 ```
 
