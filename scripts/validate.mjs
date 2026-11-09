@@ -45,6 +45,20 @@ if (marketplace && !Array.isArray(marketplace.plugins)) {
   errors.push('marketplace.json: "plugins" must be an array');
 }
 
+// --- hooks: every command hook runs a bundled .mjs through node ---
+const hooksFile = await readJson('hooks/hooks.json');
+for (const [event, groups] of Object.entries(hooksFile?.hooks ?? {})) {
+  for (const handler of (groups ?? []).flatMap((g) => g.hooks ?? [])) {
+    if (handler.type !== 'command') continue;
+    const m = /^node "\$\{CLAUDE_PLUGIN_ROOT\}\/([^"]+\.mjs)"(?: .*)?$/.exec(handler.command ?? '');
+    if (!m) {
+      errors.push(`hooks/hooks.json: ${event} command must be node "\${CLAUDE_PLUGIN_ROOT}/<script>.mjs" (got ${JSON.stringify(handler.command)})`);
+    } else if (!(await exists(m[1]))) {
+      errors.push(`hooks/hooks.json: ${event} script does not exist: ${m[1]}`);
+    }
+  }
+}
+
 // --- workforces ---
 const KEBAB = /^[a-z0-9][a-z0-9-]*$/;
 
