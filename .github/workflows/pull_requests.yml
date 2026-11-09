@@ -25,3 +25,5 @@ jobs:
         run: npm run validate
       - name: Test hooks
         run: npm run test:hooks
+      - name: Test skills
+        run: npm run test:skills
