@@ -2,6 +2,8 @@
 name: worktree-cleanup
 description: Clean up after a PR is merged — remove the worktree, delete the branch, update issue labels, complete the mission, and remove the work log. Trigger when the user says "PR is merged", "cleanup #NNN", "merged", "let's clean up", or "it's merged".
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep
+kind: process
+checked: 2026-11
 ---
 
 # Worktree Cleanup — Post-Merge

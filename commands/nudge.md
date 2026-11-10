@@ -2,6 +2,8 @@
 description: Record a manual correction ("you skipped the tests") against a process step and this repo, or report the nudges so far. Three nudges on one step in a repo mark it as withered.
 argument-hint: [<step> [note]]
 allowed-tools: Bash
+kind: process
+checked: 2026-11
 ---
 
 # /bcp:nudge — record or report manual corrections

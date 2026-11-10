@@ -2,6 +2,8 @@
 name: worktree-create
 description: Start fresh work on a GitHub issue — derive the branch name and type, create the git worktree, label the issue in-progress, activate the assigned clone, and create the issue work log. Trigger when the user picks an issue to work on fresh (no existing worktree), e.g. "let's do #215", "start #215", "work on #NNN".
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep
+kind: process
+checked: 2026-11
 ---
 
 # Worktree Create — Fresh Feature Start

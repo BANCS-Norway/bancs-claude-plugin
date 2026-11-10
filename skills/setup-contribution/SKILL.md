@@ -4,6 +4,8 @@ description: Set up the open-source contribution workflow memory for the current
 disable-model-invocation: true
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep
 argument-hint: [upstream-repo (optional, e.g. owner/repo)]
+kind: process
+checked: 2026-11
 ---
 
 Set up the contribution workflow memory for the current repository. Follow every step exactly.
