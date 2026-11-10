@@ -1,3 +1,10 @@
+## [1.7.1](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.7.0...v1.7.1) (2026-11-10)
+
+
+### Bug Fixes
+
+* **skills:** use cd instead of git -C in worktree-resume ([43867ef](https://github.com/BANCS-Norway/bancs-claude-plugin/commit/43867efdde3031d2fa693e744cf5c22f4a8627c8)), closes [#23](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/23)
+
 # [1.7.0](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.6.0...v1.7.0) (2026-11-10)
 
 
