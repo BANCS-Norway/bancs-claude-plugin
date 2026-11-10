@@ -80,14 +80,14 @@ The last column names the issue that carries the change, where one exists.
 
 | ID | Step | Owner | Native overlap | Action | Issue / note |
 | --- | --- | --- | --- | --- | --- |
-| CG1 | `git diff`, `git diff --staged`, `git status` | shim | PARTIAL; see native-overlap.md, CG1 | slim |  |
+| CG1 | `git diff`, `git diff --staged`, `git status` | shim | PARTIAL; see native-overlap.md, CG1 | slim | No retirement condition, so outside the shim review (#36). |
 | CG2 | Commit types (`feat`, `fix`, `style`, ...) | convention | None | move | #41 reads commitlint / release config |
 | CG3 | Version-bump table "VitePress site changes only" | convention | None | move | #41, closes #22. Describes another repo's site; bcp uses semantic-release. |
 | CG4 | Optional scope | convention | None | move | #41 |
 | CG5 | Message body, `Part of #{NNN}` trailer | convention | None | move | #41 |
 | CG6 | Hard-coded `Generated with Claude Code` / `Co-Authored-By` footer | shim | YES; see native-overlap.md, CG6 | retire | Conflicts with the attribution the harness supplies. |
 | CG7 | Show proposal, wait for approval | process | None | keep | Human approves every commit. |
-| CG8 | `git add` and `git commit` | shim | PARTIAL; see native-overlap.md, CG8 | slim |  |
+| CG8 | `git add` and `git commit` | shim | PARTIAL; see native-overlap.md, CG8 | slim | No retirement condition, so outside the shim review (#36). |
 | CG9 | Append batch to the work log | process | None | enforce | #31 |
 | CG10 | Ask which checklist items resolved, sync to issue body | process | None | keep | |
 | CG11 | Comment on the issue for descoped items | process | None | enforce | #32 |
@@ -166,7 +166,7 @@ The last column names the issue that carries the change, where one exists.
 | ID | Step | Owner | Native overlap | Action | Issue / note |
 | --- | --- | --- | --- | --- | --- |
 | HK1 | `SessionStart`: seed `~/.claude/bcp/workforce.json` from the bundled default | shim | NO; see native-overlap.md, HK1 | keep | #28 ports it to `.mjs`; #35 extends it with the version compare. |
-| HK2 | Drain the stdin payload | shim | NO; see native-overlap.md, HK2 | keep | #28 replaces it with a shared payload helper. |
+| HK2 | Drain the stdin payload | shim | NO; see native-overlap.md, HK2 | keep | #28 replaces it with a shared payload helper. No retirement condition, so outside the shim review (#36). |
 
 ## Not steps, but missing
 

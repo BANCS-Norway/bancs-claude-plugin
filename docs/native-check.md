@@ -14,7 +14,7 @@ Claude Code ships features fast, and a bcp step that copies one becomes dead wei
    - it is not Claude Code's job at all (team process, repo convention): it is a `process` or `convention` piece and needs no `fills-gap`.
 4. **Record the finding.**
    - Skill or command: put `fills-gap` and `retire-when` in its frontmatter ([skill-frontmatter.md](skill-frontmatter.md)). `npm run validate` rejects a `shim` without them.
-   - Hook: `hooks.json` has no frontmatter, so add a row to [native-overlap.md](native-overlap.md) with the native feature, a verdict, `fills-gap` and `retire-when` (see `HK1`).
-5. **Date it.** A skill or command gets `checked: YYYY-MM`, the month of this check.
+   - Hook: `hooks.json` has no frontmatter, so add a row to [native-overlap.md](native-overlap.md) with the native feature, a verdict, `fills-gap`, `retire-when` and `checked` (see `HK1`).
+5. **Date it.** Set `checked: YYYY-MM`, the month of this check, in the frontmatter or the row.
 
 If the docs don't say either way, write that down (`CANNOT-CONFIRM` in native-overlap.md) instead of guessing.
