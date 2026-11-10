@@ -10,7 +10,8 @@
     "lint:fix": "markdownlint-cli2 --fix '**/*.md' '#node_modules' '#CHANGELOG.md'",
     "test:hooks": "node --test scripts/hooks.test.mjs",
     "test:skills": "node --test scripts/skill-frontmatter.test.mjs",
-    "test": "node scripts/validate.mjs && npm run test:hooks && npm run test:skills",
+    "test:stop": "node --test scripts/stop-check.test.mjs",
+    "test": "node scripts/validate.mjs && npm run test:hooks && npm run test:skills && npm run test:stop",
     "prepare": "husky"
   },
   "repository": {
