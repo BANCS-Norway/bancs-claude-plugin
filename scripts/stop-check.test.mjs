@@ -6,7 +6,7 @@ import { chmodSync, existsSync, mkdtempSync, readFileSync, symlinkSync, writeFil
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { checkLastTurn, parseTranscript, toEvents } from './lib/process-steps.mjs';
+import { STEPS, checkLastTurn, parseTranscript, toEvents } from './lib/process-steps.mjs';
 
 const scripts = dirname(fileURLToPath(import.meta.url));
 const tmp = () => mkdtempSync(join(tmpdir(), 'bcp-stop-'));
@@ -40,6 +40,11 @@ test('a bare commit skips every step except the issue link', () => {
   assert.deepEqual(f.skipped, ['tests', 'work-log', 'checklist-sync', 'commit-guide']);
   assert.equal(f.issue, 31);
   assert.equal(f.branch, 'feat/31_x');
+});
+
+test('STEPS lists every step checkBatch can report', () => {
+  const offBranch = check(prompt(), commit('feat: y', { gitBranch: 'main' }))[0].skipped; // skips them all
+  assert.deepEqual(offBranch, STEPS);
 });
 
 test('each step is detected on its own', () => {

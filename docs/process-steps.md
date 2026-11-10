@@ -31,6 +31,20 @@ A comment is visible to everyone who can read the repo, which is why it is opt-i
 - The issue may be closed; the comment is still posted.
 - If `gh` is missing, unauthenticated or offline, the commit is still recorded, the hook exits `0`, and the notice says `could not comment on #N`. The post is not retried, because the commit is already in the log and no longer counts as new.
 
+## Manual nudges
+
+`/bcp:nudge <step> [note]` records a correction you had to give by hand ("you skipped the tests"), and `/bcp:nudge` with no arguments reports them. The command passes its arguments to `scripts/nudge.mjs` untouched, so the step check is code, not something a model has to remember. It catches what the Stop hook cannot see, and the hook's findings and your nudges can be read side by side because they use the same step names and repo.
+
+- **Steps:** the five above, plus `review` and `issues`, which [the decay baseline](decay-baseline.md) shows decaying but the hook cannot detect. Anything else is refused with the list, so a typo such as `test` cannot split the counts.
+- **Repo:** the current directory's, `owner/name` from `origin`, else the folder name. Outside a git repository there is nothing to record against and the command refuses.
+- **Log:** `~/.claude/bcp/nudges.jsonl`, one line per nudge, apart from `skipped-steps.jsonl` because one is a human report and the other a machine finding:
+
+  ```json
+  {"ts":"2026-11-10T14:02:11.000Z","repo":"BANCS-Norway/bancs-claude-plugin","step":"tests","note":"committed without running them"}
+  ```
+
+- **Withered:** three nudges on one step in one repo, counted over the whole log. The mark never clears by itself; there is no reset yet.
+
 ## Limits
 
 - Detection reads tool calls in the transcript. A step done another way (a test run in a terminal outside the session) counts as skipped.

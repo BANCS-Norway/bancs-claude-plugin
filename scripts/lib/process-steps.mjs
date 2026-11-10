@@ -84,6 +84,9 @@ function wroteWorkLog(ev) {
   return WORK_LOG.test(cmd) && /(?:>>?|\btee\b)\s*\S*(?:issue-\d+\.md|issues\/\d+\/log\.md)/.test(cmd);
 }
 
+/** The steps `checkBatch` can report, in the order it reports them (a test keeps the two in step). */
+export const STEPS = ['tests', 'work-log', 'checklist-sync', 'commit-guide', 'issue-link'];
+
 /** The steps a batch skipped. `window` is the tool events since the previous commit, up to this one. */
 export function checkBatch(window, commit, branch) {
   const skipped = [];

@@ -41,6 +41,7 @@ This repository is a single-plugin marketplace named `bancs`:
 | `/bcp:missions` | Report current mission status for the project (grouped by the active workforce) |
 | `/bcp:missions-sync` | Sync mission timestamps from GitHub issue events |
 | `/bcp:workforce` | List / switch / update the active workforce (the agent persona roster) |
+| `/bcp:nudge` | Record a manual correction against a process step and repo, or report the nudges (three on a step in a repo = withered) |
 
 ### Hooks (`hooks/hooks.json`)
 
@@ -67,7 +68,7 @@ colliding issue numbers.
 .claude-plugin/
   plugin.json          # manifest (name: "bcp")
   marketplace.json     # single-plugin marketplace (name: "bancs")
-commands/              # /bcp:missions, /bcp:missions-sync, /bcp:workforce
+commands/              # /bcp:missions, /bcp:missions-sync, /bcp:workforce, /bcp:nudge
 skills/<name>/SKILL.md # the worktree + issue/PR workflow skills
 hooks/hooks.json       # SessionStart hook (seeds the active workforce)
 workforces/            # bundled workforces + index.json + schema
