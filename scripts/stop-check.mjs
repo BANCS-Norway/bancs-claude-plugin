@@ -9,8 +9,9 @@
 import { execFileSync } from 'node:child_process';
 import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { basename, join } from 'node:path';
+import { join } from 'node:path';
 import { readPayload, shouldRun } from './lib/hook.mjs';
+import { git, repoOf } from './lib/repo.mjs';
 import { checkLastTurn, parseTranscript, toEvents } from './lib/process-steps.mjs';
 
 const payload = readPayload();
@@ -18,26 +19,6 @@ if (!shouldRun(payload, { event: 'Stop' })) process.exit(0);
 
 const transcript = payload.transcript_path;
 if (typeof transcript !== 'string' || !existsSync(transcript)) process.exit(0);
-
-const git = (cwd, ...args) => {
-  try {
-    return execFileSync('git', ['-C', cwd, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
-  } catch {
-    return undefined;
-  }
-};
-
-// `repo` is `owner/name` from the origin remote (any host), else the folder name. `onGitHub` is true
-// only when that remote is on github.com: `gh` talks to github.com, so a GitLab or self-hosted
-// `acme/app` must never be handed to it, or the comment would land on an unrelated GitHub repo.
-function repoOf(cwd) {
-  if (!cwd) return { repo: null, onGitHub: false };
-  const remote = git(cwd, 'remote', 'get-url', 'origin');
-  const m = remote && /[:/]([^/:]+\/[^/]+?)(?:\.git)?$/.exec(remote);
-  if (m) return { repo: m[1], onGitHub: /^(?:[a-z+]+:\/\/)?(?:[^@/]+@)?github\.com[:/]/i.test(remote) };
-  const top = git(cwd, 'rev-parse', '--show-toplevel');
-  return { repo: top ? basename(top) : null, onGitHub: false };
-}
 
 let findings;
 try {
