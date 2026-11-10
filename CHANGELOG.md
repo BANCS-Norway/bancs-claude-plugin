@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.4.0...v1.5.0) (2026-11-10)
+
+
+### Features
+
+* **commands:** add /nudge to record manual corrections per step and repo ([198336b](https://github.com/BANCS-Norway/bancs-claude-plugin/commit/198336be9dbcfb59e9817d170d512c77ede11b17)), closes [#33](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/33)
+
 # [1.4.0](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.3.0...v1.4.0) (2026-11-10)
 
 
