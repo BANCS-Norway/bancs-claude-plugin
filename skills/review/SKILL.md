@@ -1,6 +1,8 @@
 ---
 name: review
 description: Self-invoked by the active workforce member at the end of a non-trivial batch, before proposing a commit to the user. Reads the current git diff, interrogates it through Rich Hickey's simplicity lens (complecting, false simplicity, hidden state), and translates observations into concrete recommendations. The user sees the findings and decides whether to address them or ship. Skip on trivial batches (see Skip rule below).
+kind: process
+checked: 2026-11
 ---
 
 # Review — Rich Hickey on the Diff

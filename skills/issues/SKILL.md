@@ -2,6 +2,8 @@
 name: issues
 description: Session entry point — sync the open GitHub issue cache and present an opinionated shortlist of what to work on next. Auto-trigger at the start of a session with no active issue context, or when the user asks "what should we work on", "what's next", "let's start", or similar.
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep
+kind: process
+checked: 2026-11
 ---
 
 # Issue Cache — Sync, Assess, and Recommend

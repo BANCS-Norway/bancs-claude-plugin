@@ -4,7 +4,7 @@
 import { readFile, readdir, access } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { checkSkillFrontmatter } from './lib/skill-frontmatter.mjs';
+import { checkFrontmatter } from './lib/skill-frontmatter.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const errors = [];
@@ -60,7 +60,7 @@ for (const [event, groups] of Object.entries(hooksFile?.hooks ?? {})) {
   }
 }
 
-// --- skills: frontmatter contract (docs/skill-frontmatter.md) ---
+// --- skills and commands: frontmatter contract (docs/skill-frontmatter.md) ---
 const skillDirs = await readdir(resolve(root, 'skills'), { withFileTypes: true }).catch(() => {
   errors.push('skills/: directory does not exist');
   return [];
@@ -69,7 +69,15 @@ for (const dir of skillDirs) {
   if (!dir.isDirectory()) continue;
   const rel = `skills/${dir.name}/SKILL.md`;
   if (!(await exists(rel))) { errors.push(`${rel}: does not exist`); continue; }
-  errors.push(...checkSkillFrontmatter(rel, await readFile(resolve(root, rel), 'utf8')));
+  errors.push(...checkFrontmatter(rel, await readFile(resolve(root, rel), 'utf8')));
+}
+const commandFiles = await readdir(resolve(root, 'commands')).catch(() => {
+  errors.push('commands/: directory does not exist');
+  return [];
+});
+for (const file of commandFiles.filter((f) => f.endsWith('.md'))) {
+  const rel = `commands/${file}`;
+  errors.push(...checkFrontmatter(rel, await readFile(resolve(root, rel), 'utf8')));
 }
 
 // --- workforces ---

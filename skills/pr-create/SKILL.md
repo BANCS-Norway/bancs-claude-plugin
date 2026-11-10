@@ -2,6 +2,8 @@
 name: pr-create
 description: Create the PR after the user has pushed the branch, then update the issue cache and work log. Trigger when the user says "pushed", "branch is pushed", "I pushed", or "create the PR".
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep
+kind: process
+checked: 2026-11
 ---
 
 # PR Create — Branch Pushed, Open the PR

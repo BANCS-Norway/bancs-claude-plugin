@@ -1,5 +1,7 @@
 ---
 description: Sync mission timestamps from GitHub issue events
+kind: process
+checked: 2026-11
 ---
 
 # Sync Mission Timestamps

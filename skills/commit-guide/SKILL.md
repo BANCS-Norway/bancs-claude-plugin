@@ -2,6 +2,8 @@
 name: commit-guide
 description: Guide the commit process after a batch of work is done — determine the correct commit type, draft the message, flag version bump impact, and commit after approval. Trigger when the user says "looks good", "ready to commit", "that's the batch", "let's commit", "approve", or similar end-of-batch signals.
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep
+kind: process
+checked: 2026-11
 ---
 
 # Commit Guide — Batch Completion

@@ -2,6 +2,8 @@
 name: worktree-resume
 description: Resume work on an issue after a crash, tool switch, or interrupted session. The worktree already exists. Trigger when the user says "let's continue #NNN", "resume #NNN", "pick up #NNN", "continue working on #NNN", or "I want to get back to #NNN".
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep
+kind: process
+checked: 2026-11
 ---
 
 # Worktree Resume — Crash or Switch Recovery

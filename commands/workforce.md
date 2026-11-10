@@ -2,6 +2,8 @@
 description: List, switch, or update the active bcp workforce (the roster of agent personas the engine assigns to issues). Bundled packs need no network; you can also pull a workforce from any GitHub repo.
 argument-hint: [list | set <name> | set <owner/repo> [name] | update | reset] 
 allowed-tools: Bash, Read, Write, WebFetch
+kind: process
+checked: 2026-11
 ---
 
 # /bcp:workforce — manage the active workforce

@@ -1,4 +1,4 @@
-// Skill frontmatter contract. See docs/skill-frontmatter.md.
+// Frontmatter contract for skills and commands. See docs/skill-frontmatter.md.
 // Pure functions: text in, data or error strings out.
 
 export const KINDS = ['shim', 'process', 'convention'];
@@ -20,13 +20,12 @@ export function parseFrontmatter(text) {
 // this flat parser does not read.
 const BLOCK_SCALAR = /^[>|][+-]?$/;
 
-// A skill without `kind` is untagged and passes (#43 tags them and makes it
-// required). A skill that declares `kind` must satisfy the whole contract.
-export function checkSkillFrontmatter(rel, text) {
+// Every skill and command must declare `kind` and satisfy the rest of the contract for it.
+export function checkFrontmatter(rel, text) {
   const fm = parseFrontmatter(text);
   if (!fm) return [`${rel}: missing frontmatter block`];
   const errors = [];
-  if (fm.kind === undefined) return errors;
+  if (fm.kind === undefined) return [`${rel}: missing "kind" (expected ${KINDS.join(', ')})`];
   for (const field of ['kind', 'checked', 'fills-gap', 'retire-when']) {
     if (BLOCK_SCALAR.test(fm[field] ?? '')) errors.push(`${rel}: "${field}" must be a single-line value`);
   }

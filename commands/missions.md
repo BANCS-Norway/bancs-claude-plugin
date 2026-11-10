@@ -1,5 +1,7 @@
 ---
 description: Report current mission status for this project, grouped by the active workforce's members.
+kind: process
+checked: 2026-11
 ---
 
 # Mission Report
