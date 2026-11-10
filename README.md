@@ -47,7 +47,9 @@ This repository is a single-plugin marketplace named `bancs`:
 
 A `SessionStart` hook (`scripts/session-start.mjs`) seeds the default workforce to
 `~/.claude/bcp/workforce.json` on first run, so the engine always has a roster — no
-manual setup, no external tools. Hooks are Node `.mjs` scripts that filter first and share
+manual setup, no external tools. A second `SessionStart` hook (`scripts/version-check.mjs`)
+stores the Claude Code version in `~/.claude/bcp/claude-version.json` and tells you once when
+it changes, so the shims can be rechecked against the new release. Hooks are Node `.mjs` scripts that filter first and share
 one payload helper; see [docs/hook-conventions.md](./docs/hook-conventions.md) before adding one.
 
 ### Workforces
