@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.2.0...v1.3.0) (2026-11-10)
+
+
+### Features
+
+* **hooks:** serialize MEMORY.md writes with a mkdir lock ([e8f3d3f](https://github.com/BANCS-Norway/bancs-claude-plugin/commit/e8f3d3fa06ebb418fa220c6d9775339aac471b7a)), closes [#19](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/19)
+
 # [1.2.0](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.1.0...v1.2.0) (2026-11-10)
 
 
