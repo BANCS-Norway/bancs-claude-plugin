@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.3.0...v1.4.0) (2026-11-10)
+
+
+### Features
+
+* **hooks:** post skipped steps as a comment on the issue ([b071a35](https://github.com/BANCS-Norway/bancs-claude-plugin/commit/b071a35260833a2ca920bbd63f7f1fc62e77ac4c)), closes [#32](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/32)
+
 # [1.3.0](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.2.0...v1.3.0) (2026-11-10)
 
 
