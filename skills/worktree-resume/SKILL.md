@@ -33,17 +33,19 @@ Run these in parallel:
 
 ```bash
 # What branch, any uncommitted changes?
-git -C .worktrees/{path} status
+cd .worktrees/{path} && git status
 
 # What commits exist since main?
-git -C .worktrees/{path} log --oneline main..HEAD
+cd .worktrees/{path} && git log --oneline main..HEAD
 
 # What files differ from main?
-git -C .worktrees/{path} diff --stat main
+cd .worktrees/{path} && git diff --stat main
 
 # Any stash?
-git -C .worktrees/{path} stash list
+cd .worktrees/{path} && git stash list
 ```
+
+Never use `git -C`: it can get past permission rules written for plain `git <subcommand>`. `cd` to the directory and run plain git.
 
 ## Check GitHub for changes since last session
 

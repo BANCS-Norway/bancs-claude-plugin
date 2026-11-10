@@ -47,7 +47,7 @@ The last column names the issue that carries the change, where one exists.
 | ID | Step | Owner | Native overlap | Action | Issue / note |
 | --- | --- | --- | --- | --- | --- |
 | WR1 | Load work log, fall back to legacy `issue-{NNN}.md` | process | None | move | #40. Legacy fallback must keep working. |
-| WR2 | `git -C` status, log, diff, stash | process | None | keep | #23: `git -C` is blocked by permission rules; use `cd`. |
+| WR2 | `cd` into the worktree, then git status, log, diff, stash | process | None | keep | #23: was `git -C`, which can bypass permission rules; now `cd` and plain git. |
 | WR3 | Check GitHub for comments, labels, state | process | None | keep | |
 | WR4 | Reconcile local `CHECKLIST.md` with issue body | process | None | keep | |
 | WR5 | Activate member (cache as fallback) | process | None | slim | Cache never holds the member; drop the fallback. |
