@@ -18,6 +18,19 @@ Each commit that skipped a step is appended once to `~/.claude/bcp/skipped-steps
 
 `issue` is `null` when the branch carries no number. Counting a step over time gives the follow rate the baseline measured once by hand.
 
+## Comment on the issue
+
+Off by default. Set `BCP_COMMENT_SKIPPED=1` and the hook also posts each newly recorded commit as one comment on its issue, with `gh issue comment <issue> --repo <owner/name>`:
+
+> bcp: a batch on `feat/32_x` was committed without tests, work-log.
+
+A comment is visible to everyone who can read the repo, which is why it is opt-in. Rules:
+
+- One comment per recorded commit. A commit already in the log is not posted again, even if the hook runs twice.
+- An entry with no issue number is recorded but not posted. So is one whose `origin` remote is not on `github.com` (no remote at all, GitLab, self-hosted, GitHub Enterprise): `gh` would post to github.com, where `acme/app` may be an unrelated repo.
+- The issue may be closed; the comment is still posted.
+- If `gh` is missing, unauthenticated or offline, the commit is still recorded, the hook exits `0`, and the notice says `could not comment on #N`. The post is not retried, because the commit is already in the log and no longer counts as new.
+
 ## Limits
 
 - Detection reads tool calls in the transcript. A step done another way (a test run in a terminal outside the session) counts as skipped.

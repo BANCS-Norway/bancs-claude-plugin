@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -104,7 +104,7 @@ test('sidechain entries and torn lines are skipped', () => {
 
 // --- stop-check.mjs, run as Claude Code runs it ---
 
-function runHook(entries, payload = {}) {
+function runHook(entries, payload = {}, env = {}) {
   const home = tmp();
   const transcript = join(tmp(), 't.jsonl');
   writeFileSync(transcript, entries.flat(Infinity).map((e) => JSON.stringify(e)).join('\n'));
@@ -112,7 +112,7 @@ function runHook(entries, payload = {}) {
     spawnSync(process.execPath, [resolve(scripts, 'stop-check.mjs')], {
       input: JSON.stringify({ hook_event_name: 'Stop', session_id: 's1', transcript_path: transcript, ...payload }),
       encoding: 'utf8',
-      env: { PATH: process.env.PATH, HOME: home, USERPROFILE: home },
+      env: { PATH: process.env.PATH, HOME: home, USERPROFILE: home, ...env },
     });
   return { run, log: join(home, '.claude', 'bcp', 'skipped-steps.jsonl') };
 }
@@ -145,4 +145,94 @@ test('stop-check stays silent for a complete batch, another event, and unreadabl
   const missing = runHook([prompt(), commit()], { transcript_path: '/nope.jsonl' });
   assert.equal(missing.run().status, 0);
   assert.equal(existsSync(missing.log), false);
+});
+
+// --- posting a comment on the issue (#32): opt-in, through a fake `gh` ---
+
+const posix = process.platform !== 'win32';
+
+function repoOn(branch, remote) {
+  const dir = tmp();
+  const git = (...args) => spawnSync('git', args, { cwd: dir, encoding: 'utf8' });
+  git('init', '-q', '-b', branch);
+  git('-c', 'user.email=t@example.com', '-c', 'user.name=T', 'commit', '-q', '--allow-empty', '-m', 'init'); // an unborn branch cannot be asked
+  if (remote) git('remote', 'add', 'origin', remote);
+  return dir;
+}
+
+function fakeGh(exit = 0) {
+  const dir = tmp();
+  const calls = join(dir, 'calls.txt');
+  writeFileSync(join(dir, 'gh'), `#!/bin/sh\nprintf '%s\\n' "$@" >> '${calls}'\nprintf -- '--\\n' >> '${calls}'\nexit ${exit}\n`);
+  chmodSync(join(dir, 'gh'), 0o755);
+  return { env: { PATH: `${dir}:${process.env.PATH}` }, calls: () => (existsSync(calls) ? readFileSync(calls, 'utf8') : '') };
+}
+
+const ON = { BCP_COMMENT_SKIPPED: '1' };
+const demoRepo = () => repoOn('feat/31_x', 'https://github.com/example-org/demo.git');
+
+test('stop-check does not comment unless BCP_COMMENT_SKIPPED=1', { skip: !posix }, () => {
+  const gh = fakeGh();
+  const { run } = runHook([prompt(), commit('feat: y', { cwd: demoRepo() })], {}, gh.env);
+  assert.equal(run().status, 0);
+  assert.equal(gh.calls(), '');
+});
+
+test('stop-check comments once per recorded commit on its issue when opted in', { skip: !posix }, () => {
+  const gh = fakeGh();
+  const { run } = runHook([prompt(), commit('feat: y', { cwd: demoRepo() })], {}, { ...gh.env, ...ON });
+  const r = run();
+  assert.equal(r.status, 0);
+  const call = gh.calls().split('\n--\n')[0].split('\n');
+  assert.deepEqual(call.slice(0, 5), ['issue', 'comment', '31', '--repo', 'example-org/demo']);
+  assert.match(call.join('\n'), /feat\/31_x/);
+  assert.match(call.join('\n'), /without tests, work-log, checklist-sync, commit-guide/);
+  assert.match(JSON.parse(r.stdout).systemMessage, /commented on 1 issue/);
+  run(); // the same commit again: already recorded, so not posted again
+  assert.equal(gh.calls().split('\n--\n').filter(Boolean).length, 1);
+});
+
+test('stop-check does not comment without an issue number or a GitHub repo', { skip: !posix }, () => {
+  const gh = fakeGh();
+  const offBranch = runHook([prompt(), commit('feat: y', { cwd: repoOn('main', 'https://github.com/example-org/demo.git') })], {}, { ...gh.env, ...ON });
+  assert.equal(offBranch.run().status, 0);
+  const noRemote = runHook([prompt(), commit('feat: y', { cwd: repoOn('feat/31_x') })], {}, { ...gh.env, ...ON });
+  assert.equal(noRemote.run().status, 0);
+  assert.equal(gh.calls(), '');
+  assert.equal(existsSync(offBranch.log), true); // still recorded
+  assert.equal(existsSync(noRemote.log), true);
+});
+
+test('stop-check comments through an SSH GitHub remote, but never through another host', { skip: !posix }, () => {
+  const ssh = fakeGh();
+  const github = runHook([prompt(), commit('feat: y', { cwd: repoOn('feat/31_x', 'git@github.com:example-org/demo.git') })], {}, { ...ssh.env, ...ON });
+  assert.equal(github.run().status, 0);
+  assert.match(ssh.calls(), /example-org\/demo/);
+  // gh talks to github.com, so acme/app on another host would hit an unrelated GitHub repo
+  for (const remote of ['git@gitlab.com:acme/app.git', 'https://gitlab.com/acme/app', 'ssh://git@git.corp.example:2222/acme/app.git', 'https://github.com.evil.example/acme/app.git']) {
+    const gh = fakeGh();
+    const other = runHook([prompt(), commit('feat: y', { cwd: repoOn('feat/31_x', remote) })], {}, { ...gh.env, ...ON });
+    assert.equal(other.run().status, 0, remote);
+    assert.equal(gh.calls(), '', remote);
+    assert.equal(JSON.parse(readFileSync(other.log, 'utf8').trim()).repo, 'acme/app', remote); // still recorded
+  }
+});
+
+test('stop-check still records and exits 0 when gh fails, and says so', { skip: !posix }, () => {
+  const gh = fakeGh(1);
+  const { run, log } = runHook([prompt(), commit('feat: y', { cwd: demoRepo() })], {}, { ...gh.env, ...ON });
+  const r = run();
+  assert.equal(r.status, 0);
+  assert.equal(readFileSync(log, 'utf8').trim().split('\n').length, 1);
+  assert.match(JSON.parse(r.stdout).systemMessage, /could not comment on #31/);
+});
+
+test('stop-check still records when gh is not installed', { skip: !posix }, () => {
+  const bin = tmp(); // git on PATH, gh not
+  symlinkSync(spawnSync('which', ['git'], { encoding: 'utf8' }).stdout.trim(), join(bin, 'git'));
+  const { run, log } = runHook([prompt(), commit('feat: y', { cwd: demoRepo() })], {}, { ...ON, PATH: bin });
+  const r = run();
+  assert.equal(r.status, 0);
+  assert.equal(readFileSync(log, 'utf8').trim().split('\n').length, 1);
+  assert.match(JSON.parse(r.stdout).systemMessage, /could not comment on #31/);
 });
