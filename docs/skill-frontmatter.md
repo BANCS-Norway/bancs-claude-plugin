@@ -6,7 +6,7 @@ Every `skills/*/SKILL.md` and `commands/*.md` declares who owns it and when it s
 | --- | --- | --- |
 | `kind` | always | `shim`, `process` or `convention`; meanings in [skill-step-audit.md](skill-step-audit.md) |
 | `checked` | always | `YYYY-MM`, the month someone last confirmed the skill is still needed |
-| `fills-gap` | `shim` | the gap in Claude Code the skill fills |
+| `fills-gap` | `shim` | the gap in Claude Code the skill fills, found by the [native check](native-check.md) |
 | `retire-when` | `shim` | the condition under which the skill should be removed |
 
 ```yaml

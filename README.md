@@ -87,6 +87,9 @@ DISCLAIMER.md          # IP / trademark notice
 
 ## Development
 
+Before adding a skill, command or hook, run the [native check](./docs/native-check.md):
+if Claude Code already does it, don't build it.
+
 ```bash
 npm install        # sets up git hooks via husky
 npm run validate   # check the manifests, hooks and referenced paths
