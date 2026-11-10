@@ -5,6 +5,9 @@ consistent with each other. `npm run validate` enforces the first rule.
 
 ## Rules
 
+0. **Native check first.** Run the [native check](native-check.md) and record the hook's
+   `fills-gap` in [native-overlap.md](native-overlap.md) before writing it.
+
 1. **Node `.mjs`, invoked through `node`.** A hook is a script under `scripts/` registered in
    `hooks/hooks.json` as:
 
