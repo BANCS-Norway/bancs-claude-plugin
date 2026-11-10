@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.6.0...v1.7.0) (2026-11-10)
+
+
+### Features
+
+* **hooks:** list stale shims after a Claude Code update and add /bcp:shim-review ([900c680](https://github.com/BANCS-Norway/bancs-claude-plugin/commit/900c6808aa2a41a23d5f7f8091385748cc0caa2f)), closes [#36](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/36)
+
 # [1.6.0](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.5.0...v1.6.0) (2026-11-10)
 
 
