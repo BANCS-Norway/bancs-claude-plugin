@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.5.0...v1.6.0) (2026-11-10)
+
+
+### Features
+
+* **hooks:** notice a new Claude Code version at session start ([86b8c1f](https://github.com/BANCS-Norway/bancs-claude-plugin/commit/86b8c1f829285ca4b516311d08bcd8539c021138)), closes [#36](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/36) [#35](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/35)
+
 # [1.5.0](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.4.0...v1.5.0) (2026-11-10)
 
 
