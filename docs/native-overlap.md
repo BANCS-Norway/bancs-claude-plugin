@@ -68,6 +68,13 @@ Docs base: `https://code.claude.com/docs/en/`
 - **Native:** none. **Verdict:** NO equivalent. Handled by #28's shared payload helper.
 - **retire-when:** not applicable.
 
+### HK3 — SessionStart notices a new Claude Code version (hook, #35)
+
+- **Native:** none for hooks. The SessionStart input carries no version ([sessionstart input](https://code.claude.com/docs/en/hooks.md#sessionstart-input); a real 2.1.322 payload had only `session_id`, `transcript_path`, `cwd`, `hook_event_name`, `source`), and no documented hook environment variable holds it ([command hook fields](https://code.claude.com/docs/en/hooks.md#command-hook-fields)). Claude Code shows its own release notes after an update, but nothing tells a plugin which version it ran under last time.
+- **Verdict:** NO equivalent. The hook runs `$CLAUDE_CODE_EXECPATH --version` (undocumented variable, seen in 2.1.322: the path of the running binary), else `claude --version`.
+- **fills-gap:** hooks receive no Claude Code version.
+- **retire-when:** the hook input or a documented environment variable carries the Claude Code version; then read it instead of spawning the binary.
+
 ## Other native-relevant rows
 
 ### WC6b, WC7 — `.worktrees/` location and the `main` base
