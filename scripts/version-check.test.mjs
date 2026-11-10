@@ -22,15 +22,21 @@ function fakeClaude(out, code = 0, name = 'claude') {
   return bin;
 }
 
-function run(home, { payload = { hook_event_name: 'SessionStart', source: 'startup' }, env = {} } = {}) {
+function run(home, { payload = { hook_event_name: 'SessionStart', source: 'startup' }, env = {}, cwd = tmp() } = {}) {
   const r = spawnSync(process.execPath, [hook], {
+    cwd, // never this checkout: it is a bcp repo, and its shims would join the output
     input: typeof payload === 'string' ? payload : JSON.stringify(payload),
     encoding: 'utf8',
-    env: { PATH: dirname(process.execPath), HOME: home, USERPROFILE: home, ...env },
+    env: { PATH, HOME: home, USERPROFILE: home, ...env },
   });
   assert.equal(r.status, 0, r.stderr);
   return r.stdout.trim() ? JSON.parse(r.stdout) : null;
 }
+
+// The real PATH (git is needed) minus any directory holding a real `claude`, so tests control it.
+const PATH = [dirname(process.execPath), ...(process.env.PATH ?? '').split(delimiter)]
+  .filter((d) => d && !existsSync(join(d, 'claude')) && !existsSync(join(d, 'claude.exe')))
+  .join(delimiter);
 
 const at = (bin) => ({ env: { CLAUDE_CODE_EXECPATH: bin } });
 const stored = (home) => JSON.parse(readFileSync(stateFile(home), 'utf8'));
@@ -63,7 +69,7 @@ test('a new version is shown once and stored straight away', () => {
 test('falls back to claude on PATH when CLAUDE_CODE_EXECPATH is unset', () => {
   const home = tmp();
   const bin = fakeClaude('2.2.0 (Claude Code)\n');
-  run(home, { env: { PATH: [dirname(bin), dirname(process.execPath)].join(delimiter) } });
+  run(home, { env: { PATH: [dirname(bin), PATH].join(delimiter) } });
   assert.equal(stored(home).seen, '2.2.0');
 });
 
@@ -106,4 +112,60 @@ test('runs on resume', () => {
   const home = tmp();
   run(home, { payload: { hook_event_name: 'SessionStart', source: 'resume' }, ...at(fakeClaude('2.1.322 (Claude Code)\n')) });
   assert.equal(stored(home).seen, '2.1.322');
+});
+
+// --- #36: stale shims, in a bcp checkout only ---
+
+/** A git checkout named `name` in plugin.json, with shim rows checked in the given months. */
+function checkout(name, months) {
+  const dir = tmp();
+  spawnSync('git', ['init', '-q', dir]);
+  mkdirSync(join(dir, '.claude-plugin'));
+  writeFileSync(join(dir, '.claude-plugin', 'plugin.json'), JSON.stringify({ name }));
+  mkdirSync(join(dir, 'docs'));
+  const rows = months.map((m, i) => `### S${i + 1} — shim ${i + 1}\n\n- **retire-when:** never.\n- **checked:** ${m}\n`);
+  writeFileSync(join(dir, 'docs', 'native-overlap.md'), `# x\n\n## Shim rows\n\n${rows.join('\n')}\n## Other\n`);
+  return dir;
+}
+
+const seed = (home, seen, at) => {
+  mkdirSync(dirname(stateFile(home)), { recursive: true });
+  writeFileSync(stateFile(home), JSON.stringify({ seen, at }));
+};
+
+test('a bcp checkout lists the shims checked before the month of the last version change', () => {
+  const home = tmp();
+  seed(home, '2.1.322', '2026-12-03');
+  const cwd = checkout('bcp', ['2026-11', '2026-12', '2026-10']);
+  const out = run(home, { ...at(fakeClaude('2.1.322 (Claude Code)\n')), cwd });
+  assert.deepEqual(out, { systemMessage: 'bcp: 2 shims last checked before 2026-12: S1, S3 — run /bcp:shim-review' });
+  assert.deepEqual(run(home, { ...at(fakeClaude('2.1.322 (Claude Code)\n')), cwd }), out); // every session until reviewed
+});
+
+test('the payload cwd decides the checkout', () => {
+  const home = tmp();
+  seed(home, '2.1.322', '2026-12-03');
+  const cwd = checkout('bcp', ['2026-11']);
+  const payload = { hook_event_name: 'SessionStart', source: 'startup', cwd };
+  assert.match(run(home, { payload, ...at(fakeClaude('2.1.322 (Claude Code)\n')) }).systemMessage, /1 shim last checked before 2026-12: S1/);
+});
+
+test('an update and stale shims go out as one message', () => {
+  const home = tmp();
+  seed(home, '2.1.321', '2026-11-20');
+  const cwd = checkout('bcp', ['2026-01']);
+  const out = run(home, { ...at(fakeClaude('2.1.322 (Claude Code)\n')), cwd });
+  const month = new Date().toISOString().slice(0, 7);
+  assert.equal(out.systemMessage, `bcp: Claude Code updated 2.1.321 → 2.1.322\nbcp: 1 shim last checked before ${month}: S1 — run /bcp:shim-review`);
+});
+
+test('no stale list outside bcp, when all are current, or before any version is recorded', () => {
+  const bin = at(fakeClaude('2.1.322 (Claude Code)\n'));
+  let home = tmp();
+  seed(home, '2.1.322', '2026-12-03');
+  assert.equal(run(home, { ...bin, cwd: checkout('other-plugin', ['2026-01']) }), null);
+  assert.equal(run(home, { ...bin, cwd: checkout('bcp', ['2026-12']) }), null);
+  home = tmp(); // first run: `at` is today, and a shim checked this month is current
+  const month = new Date().toISOString().slice(0, 7);
+  assert.equal(run(home, { ...bin, cwd: checkout('bcp', [month]) }), null);
 });

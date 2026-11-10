@@ -75,7 +75,7 @@ const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 // A copy of the plugin tree: validate.mjs finds its root from its own path, so the copy judges itself.
 function pluginCopy() {
   const dir = mkdtempSync(join(tmpdir(), 'bcp-validate-'));
-  for (const d of ['.claude-plugin', 'hooks', 'skills', 'commands', 'workforces', 'scripts']) {
+  for (const d of ['.claude-plugin', 'hooks', 'skills', 'commands', 'workforces', 'scripts', 'docs']) {
     cpSync(join(repo, d), join(dir, d), { recursive: true });
   }
   return dir;
@@ -95,4 +95,13 @@ test('validate fails on an untagged command and an untagged skill, and names bot
   assert.equal(r.status, 1);
   assert.match(r.stderr, /commands\/nudge\.md: missing "kind"/);
   assert.match(r.stderr, /skills\/review\/SKILL\.md: missing "kind"/);
+});
+
+test('validate fails on a native-overlap shim row without a checked month (#36)', () => {
+  const dir = pluginCopy();
+  const file = join(dir, 'docs', 'native-overlap.md');
+  writeFileSync(file, readFileSync(file, 'utf8').replace(/^- \*\*checked:\*\* .*\r?\n/m, ''));
+  const r = validate(dir);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /docs\/native-overlap\.md: shim row WC6a "checked" must be YYYY-MM/);
 });

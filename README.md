@@ -42,6 +42,7 @@ This repository is a single-plugin marketplace named `bancs`:
 | `/bcp:missions-sync` | Sync mission timestamps from GitHub issue events |
 | `/bcp:workforce` | List / switch / update the active workforce (the agent persona roster) |
 | `/bcp:nudge` | Record a manual correction against a process step and repo, or report the nudges (three on a step in a repo = withered) |
+| `/bcp:shim-review` | In the bcp repo: review the shims not checked since the last Claude Code update against their `retire-when`, and mark each one checked |
 
 ### Hooks (`hooks/hooks.json`)
 
@@ -49,7 +50,8 @@ A `SessionStart` hook (`scripts/session-start.mjs`) seeds the default workforce 
 `~/.claude/bcp/workforce.json` on first run, so the engine always has a roster — no
 manual setup, no external tools. A second `SessionStart` hook (`scripts/version-check.mjs`)
 stores the Claude Code version in `~/.claude/bcp/claude-version.json` and tells you once when
-it changes, so the shims can be rechecked against the new release. Hooks are Node `.mjs` scripts that filter first and share
+it changes. In the bcp repo it also lists the shims not checked since that change, every
+session until `/bcp:shim-review` marks them. Hooks are Node `.mjs` scripts that filter first and share
 one payload helper; see [docs/hook-conventions.md](./docs/hook-conventions.md) before adding one.
 
 ### Workforces

@@ -4,6 +4,7 @@
 import { readFile, readdir, access } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { OVERLAP_FILE, checkOverlapShims } from './lib/shims.mjs';
 import { checkFrontmatter } from './lib/skill-frontmatter.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -78,6 +79,11 @@ const commandFiles = await readdir(resolve(root, 'commands')).catch(() => {
 for (const file of commandFiles.filter((f) => f.endsWith('.md'))) {
   const rel = `commands/${file}`;
   errors.push(...checkFrontmatter(rel, await readFile(resolve(root, rel), 'utf8')));
+}
+
+// --- shim rows in native-overlap.md: retire-when and checked (#36) ---
+if (await exists(OVERLAP_FILE)) {
+  errors.push(...checkOverlapShims(OVERLAP_FILE, await readFile(resolve(root, OVERLAP_FILE), 'utf8')));
 }
 
 // --- workforces ---
