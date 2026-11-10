@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.1.0...v1.2.0) (2026-11-10)
+
+
+### Features
+
+* **hooks:** add Stop hook that records skipped process steps ([5da5955](https://github.com/BANCS-Norway/bancs-claude-plugin/commit/5da5955d918a9e24c89369432fbd62b8ddf5ae9e)), closes [#31](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/31)
+
 # [1.1.0](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.0.3...v1.1.0) (2026-11-09)
 
 
