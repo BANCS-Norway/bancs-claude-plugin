@@ -134,6 +134,8 @@ or `start: failed`. Between the worktree and the dependencies it copies and link
   suggest the likely ones, and write the file with them. Format and meaning:
   [docs/worktreeinclude.md](../../docs/worktreeinclude.md). An empty file is a valid answer. Copy the
   files into the worktree by hand this once, because the script has already run.
+- Git hooks that an installer generates and gitignores (husky's `.husky/_`) go under `## links`, not in the copied
+  list: a worktree without them runs no hooks and git says nothing. The same docs page explains why.
 - On `start: failed`, nothing was created. Stop and report; do not run `git worktree add` yourself.
 - Do not run `git worktree add`, `ln -s`, `npm ci` or `direnv allow` yourself: the script did.
 

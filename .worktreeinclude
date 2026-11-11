@@ -1,2 +1,7 @@
-# bcp needs no gitignored files in a new worktree: worktree-start links node_modules itself.
+# bcp copies no gitignored files into a new worktree: worktree-start links node_modules itself.
 # Format: docs/worktreeinclude.md
+
+## links
+# The git hooks. husky generates .husky/_ on install and gitignores it, and core.hooksPath points at it,
+# so a worktree without it runs no hooks (commitlint, pre-commit) and says nothing about it.
+# link: .husky/_

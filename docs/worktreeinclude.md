@@ -22,6 +22,12 @@ build/
 - **Under `## links`:** each `# link: <path>` becomes a symlink to that path in the main checkout, not a copy. For a
   large or shared folder that must not diverge. The path must be relative and inside the repo. To Claude Code these lines
   are comments, so the same file works for both.
+- **Git hooks from an installer (husky):** link them. husky generates `.husky/_` on install, gitignores it and sets
+  `core.hooksPath` to it, a path relative to the worktree. A worktree without it runs no hooks and git does not say so:
+  commitlint and the pre-commit hook never fire. Under `## links`: `# link: .husky/_`. A link, not a copy, so it follows
+  the main checkout when husky regenerates the folder. The hook scripts find the worktree's own tracked `.husky/*`
+  from their own path. Any tool that generates ignored hook files at install time needs the same line
+  ([#76](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/76)).
 - **No file:** `worktree-start` prints `warn: no .worktreeinclude` and `worktree-create` asks whether to write one. An
   **empty** file means nothing is needed and silences the warning.
 - **Not here:** the `node_modules` link or `npm ci` for a Node project is separate and stays; a project that wants another
