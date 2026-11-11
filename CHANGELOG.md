@@ -1,3 +1,10 @@
+## [1.10.2](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.10.1...v1.10.2) (2026-11-11)
+
+
+### Bug Fixes
+
+* **skills:** one script finds the work-log folder from the main checkout ([5422bab](https://github.com/BANCS-Norway/bancs-claude-plugin/commit/5422baba3b93a21cf7cd0ad5cf4648201615c601)), closes [#69](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/69)
+
 ## [1.10.1](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.10.0...v1.10.1) (2026-11-11)
 
 
