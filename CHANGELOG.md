@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.7.1...v1.8.0) (2026-11-11)
+
+
+### Features
+
+* **context:** detect project facts once and add /bcp:context ([3019864](https://github.com/BANCS-Norway/bancs-claude-plugin/commit/30198649cb2952e45eb4d789b8cde49f121eec16)), closes [#24](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/24) [#22](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/22)
+
 ## [1.7.1](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.7.0...v1.7.1) (2026-11-10)
 
 
