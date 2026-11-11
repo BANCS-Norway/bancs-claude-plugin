@@ -105,11 +105,11 @@ Format:
 {bullet points summarising what changed — keep to essentials}
 
 Part of #{NNN}
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-
-Co-Authored-By: Claude <noreply@anthropic.com>
 ```
+
+Write no attribution footer (`Generated with`, `Co-Authored-By`). Claude Code adds its own from the
+`attribution` setting, and the session may name the lines to end with; a footer written here would
+be a second one, and would name the wrong model.
 
 Keep the subject line under 72 characters. Description is imperative mood: "add", "fix", "update" not "added", "fixed", "updated".
 

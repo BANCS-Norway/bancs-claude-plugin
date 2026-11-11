@@ -55,21 +55,6 @@ Docs base: `https://code.claude.com/docs/en/`
 - **retire-when:** native removes a session worktree and its branch when the linked PR merges.
 - **checked:** 2026-11
 
-### CG6, PR4 — hard-coded `Generated with Claude Code` and `Co-Authored-By` footers (commit-guide, pr-create)
-
-- **Native:** the `attribution` setting. `attribution.commit` defaults to `Co-Authored-By: <model name> <noreply@anthropic.com>`; `attribution.pr` defaults to the `Generated with Claude Code` line; an empty string hides either. `includeCoAuthoredBy` is deprecated (2.0.62). [attribution](https://code.claude.com/docs/en/settings-reference.md#attribution)
-- **Verdict:** YES. Both footers are redundant with the native lines.
-- **Caveat:** the docs don't say how a footer written into a skill's text interacts with `attribution`. Removing the footer from the skill text and setting `attribution` is the clean route.
-- **retire-when:** now.
-- **checked:** 2026-11
-
-### PR6 — `cd` into the worktree, `gh pr create` (pr-create)
-
-- **Native:** PR creation is documented as asking Claude to "create a pr". [common workflows](https://code.claude.com/docs/en/common-workflows.md#create-pull-requests)
-- **Verdict:** PARTIAL. The docs don't confirm that `gh` is used. The `cd` guard against working-directory drift is bcp-specific.
-- **retire-when:** only the `cd` guard remains; retire it if Claude Code keeps the shell in the session's worktree.
-- **checked:** 2026-11
-
 ### HK1 — SessionStart seeds `~/.claude/bcp/workforce.json` (hook)
 
 - **Native:** `${CLAUDE_PLUGIN_DATA}` is a directory that survives updates, created on first reference (2.1.78). The docs' own first-run pattern is a SessionStart hook that copies files into it. There is no post-install hook; a `Setup` hook fires only with `--init-only`, `--init` or `--maintenance`. [plugin paths](https://code.claude.com/docs/en/plugins/components.md#reference-plugin-paths-and-store-data), [setup](https://code.claude.com/docs/en/hooks.md#setup)
@@ -95,6 +80,18 @@ Rows that touch a native feature but can never retire. CG1/CG8 and HK2 were shim
 - **Native:** built-in commit and PR instructions, which the `includeGitInstructions` setting can remove. [common workflows](https://code.claude.com/docs/en/common-workflows.md#create-pull-requests), [setting](https://code.claude.com/docs/en/settings-reference.md#includegitinstructions)
 - **Verdict:** PARTIAL. The docs confirm built-in git instructions exist. They don't confirm the exact status/diff steps.
 - **retire-when:** not a retirement candidate while the human approves every commit. The slim is to keep only the approval step and rely on native for the mechanics.
+
+### CG6, PR4 — hard-coded `Generated with Claude Code` and `Co-Authored-By` footers (commit-guide, pr-create)
+
+- **Retired by #44.** Both footers are gone from the skills, which now tell the model to write none.
+- **Native:** the `attribution` setting. `attribution.commit` defaults to `Co-Authored-By: <model name> <noreply@anthropic.com>`; `attribution.pr` defaults to the `Generated with Claude Code` line; an empty string hides either. `includeCoAuthoredBy` is deprecated (2.0.62). [attribution](https://code.claude.com/docs/en/settings-reference.md#attribution)
+- **Verdict:** YES. The skill footers were redundant with the native lines, and named a fixed model.
+
+### PR6 — `cd` into the worktree, `gh pr create` (pr-create)
+
+- **Native:** PR creation is documented as asking Claude to "create a pr". [common workflows](https://code.claude.com/docs/en/common-workflows.md#create-pull-requests)
+- **Verdict:** PARTIAL. The docs don't confirm that `gh` is used. The `cd` guard against working-directory drift is bcp-specific.
+- **retire-when:** not a shim since #44: `gh pr create` is the process's own command. If Claude Code keeps the shell in the session's worktree, drop the `cd` sentence from the skill.
 
 ### HK2 — drain the stdin payload (hook)
 

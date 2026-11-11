@@ -53,9 +53,10 @@ Closes #{NNN}
 
 ## Test plan
 - [ ] {key things to verify}
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
 ```
+
+Write no attribution line (`Generated with Claude Code`). Claude Code adds its own from the
+`attribution` setting, and the session may name the line to end the description with.
 
 Keep the summary tight — what changed and why, not a repeat of the commit messages.
 
