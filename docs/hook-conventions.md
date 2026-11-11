@@ -51,3 +51,7 @@ if (!shouldRun(payload, { event: 'PreToolUse', path: /\/MEMORY\.md$/ })) process
 - `path` is a RegExp tested against the file the tool call targets
   (`tool_input.file_path`, `path` or `notebook_path`), with Windows backslashes turned into `/`.
   A payload with no path fails.
+- `command` is a RegExp tested against the shell command of a Bash tool call
+  (`tool_input.command`). A payload with no command fails. Use it as a cheap first cut, then
+  check the command properly in the hook; `hooks.json` can pre-filter too with
+  `"if": "Bash(git commit *)"`, which the docs call best-effort.

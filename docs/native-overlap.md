@@ -72,6 +72,17 @@ Docs base: `https://code.claude.com/docs/en/`
 - **retire-when:** the hook input or a documented environment variable carries the Claude Code version; then read it instead of spawning the binary.
 - **checked:** 2026-11
 
+### HK4 — PreToolUse guard on `git commit` (hook, #45)
+
+- **Native:** permission rules can allow, ask or deny `Bash(git commit *)`, but only on the command text: the rule syntax has no branch, git state or staged-file condition. A deny rule would block every commit. [wildcard patterns](https://code.claude.com/docs/en/permissions.md#wildcard-patterns), [Bash rule limits](https://code.claude.com/docs/en/permissions.md#bash-rule-limits) ("To inspect the full command text with your own logic before it runs, use a PreToolUse hook.") No protected-branch feature and no staged-file, secret or large-file check appears in the docs or in the changelog read (2.1.322 down to part of 2.1.318).
+- **Hook mechanics (docs):** a `PreToolUse` hook with `"matcher": "Bash"` gets `tool_input.command` on stdin. The `if` field takes one permission rule such as `Bash(git commit *)`, but it is best-effort ("When Claude Code can't determine which commands the Bash input runs, it runs your hook regardless of the pattern"), so the script re-checks the command itself. Printing `{"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": "..."}}` blocks the call and "shows Claude the reason". Exit 0 with no output means no decision. [how a hook resolves](https://code.claude.com/docs/en/hooks.md#how-a-hook-resolves), [common fields](https://code.claude.com/docs/en/hooks.md#common-fields)
+- **Verdict:** NO equivalent for the branch and staged-file checks; PARTIAL for the commit match (`if` pre-filters it).
+- **fills-gap:** no native rule is conditioned on the current branch or on what is staged.
+- **retire-when:** permission rules or a setting can condition on the current branch (a protected-branch setting), and a native staged-file secret or size check ships.
+- **CANNOT-CONFIRM:** the version that added the hook `if` field; whether exit code 2 on stderr blocks a `PreToolUse` call the same way (the hook uses the JSON `deny` above instead); whether `PreToolUse` hooks run under `bypassPermissions`; whether a plugin's `hooks.json` accepts `if` and `onFailure` (`onFailure` needs 2.1.295). The rest of the changelog before 2.1.318 was not read verbatim.
+- **Not covered by the hook:** only staged content is checked, so `git commit -a`, `git commit <path>` and `git -C <dir> commit` pass unchecked.
+- **checked:** 2026-11
+
 ## Other native-relevant rows
 
 Rows that touch a native feature but can never retire. CG1/CG8 and HK2 were shim rows until #36 moved them here: they have no retirement condition, so the monthly shim review would only ask about them again.

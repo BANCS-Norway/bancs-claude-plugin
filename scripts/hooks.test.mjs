@@ -6,7 +6,7 @@ import { existsSync, mkdirSync, mkdtempSync, openSync, readFileSync, writeFileSy
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readPayload, shouldRun, toolPath } from './lib/hook.mjs';
+import { readPayload, shouldRun, toolCommand, toolPath } from './lib/hook.mjs';
 
 const scripts = dirname(fileURLToPath(import.meta.url));
 const tmp = () => mkdtempSync(join(tmpdir(), 'bcp-hook-'));
@@ -56,6 +56,20 @@ test('shouldRun filters by path, including Windows paths', () => {
   assert.equal(shouldRun({ tool_input: { file_path: 'C:\\p\\memory\\MEMORY.md' } }, memory), true);
   assert.equal(shouldRun({ tool_input: { file_path: '/p/README.md' } }, memory), false);
   assert.equal(shouldRun({}, memory), false);
+});
+
+test('toolCommand reads the Bash command', () => {
+  assert.equal(toolCommand({ tool_input: { command: 'git commit -m x' } }), 'git commit -m x');
+  assert.equal(toolCommand({ tool_input: { command: 3 } }), undefined);
+  assert.equal(toolCommand({}), undefined);
+});
+
+test('shouldRun filters by command and fails a payload with none', () => {
+  const commit = { command: /\bgit commit\b/ };
+  assert.equal(shouldRun({ tool_input: { command: 'git commit -m x' } }, commit), true);
+  assert.equal(shouldRun({ tool_input: { command: 'git status' } }, commit), false);
+  assert.equal(shouldRun({ tool_input: { file_path: '/a' } }, commit), false);
+  assert.equal(shouldRun({}, commit), false);
 });
 
 // --- session-start.mjs, run as Claude Code runs it: node, payload on stdin ---
