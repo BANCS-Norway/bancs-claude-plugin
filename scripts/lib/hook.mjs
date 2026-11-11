@@ -29,6 +29,12 @@ export function toolPath(payload) {
   return typeof p === 'string' ? p.replaceAll('\\', '/') : undefined;
 }
 
+/** The shell command a Bash tool call runs, or undefined when the payload has none. */
+export function toolCommand(payload) {
+  const c = payload?.tool_input?.command;
+  return typeof c === 'string' ? c : undefined;
+}
+
 /**
  * The early filter. Call it first and exit 0 when it returns false.
  *
@@ -36,13 +42,18 @@ export function toolPath(payload) {
  * - `event`: skip when the payload names a different `hook_event_name`. A payload
  *   that names none still passes; hooks.json already registers the hook per event.
  * - `path`: a RegExp tested against `toolPath(payload)`. A payload with no path fails.
+ * - `command`: a RegExp tested against `toolCommand(payload)`. A payload with no command fails.
  */
-export function shouldRun(payload, { event, path } = {}) {
+export function shouldRun(payload, { event, path, command } = {}) {
   if (!payload) return false; // unreadable payload: do nothing
   if (event && payload.hook_event_name && payload.hook_event_name !== event) return false;
   if (path) {
     const p = toolPath(payload);
     if (p === undefined || !path.test(p)) return false;
+  }
+  if (command) {
+    const c = toolCommand(payload);
+    if (c === undefined || !command.test(c)) return false;
   }
   return true;
 }
