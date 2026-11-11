@@ -116,10 +116,16 @@ ARGS
 ```
 
 It prints `base: <ref>`, one `ok:`, `warn:` or `FAIL:` line per check or step, then `start: done`
-or `start: failed`.
+or `start: failed`. Between the worktree and the dependencies it copies and links what the repo's
+`.worktreeinclude` names.
 
 - Show every `warn:` and `FAIL:` line as it is. A `warn:` (for example a failed `npm ci`, or direnv
   not installed) does not stop the run; say what it means for the user.
+- `warn: no .worktreeinclude`: the repo names no gitignored files to copy (`.env`, build output). Ask the
+  user whether the new worktree needs any: look at `git status --short --ignored` in the main checkout,
+  suggest the likely ones, and write the file with them. Format and meaning:
+  [docs/worktreeinclude.md](../../docs/worktreeinclude.md). An empty file is a valid answer. Copy the
+  files into the worktree by hand this once, because the script has already run.
 - On `start: failed`, nothing was created. Stop and report; do not run `git worktree add` yourself.
 - Do not run `git worktree add`, `ln -s`, `npm ci` or `direnv allow` yourself: the script did.
 

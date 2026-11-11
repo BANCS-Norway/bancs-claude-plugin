@@ -22,13 +22,13 @@ Docs base: `https://code.claude.com/docs/en/`
 - **retire-when:** native worktrees accept a caller-chosen branch name, or bcp adopts `worktree-<name>` naming and the `fresh` base.
 - **checked:** 2026-11
 
-### WC9 — `node_modules` symlink or `npm ci` (worktree-create)
+### WC9 — `node_modules` symlink or `npm ci`, and `.worktreeinclude` (worktree-create)
 
 - **Native:** `.worktreeinclude` copies gitignored files that match its patterns. [worktrees](https://code.claude.com/docs/en/worktrees.md#copy-gitignored-files-into-worktrees) The separate setting `worktree.symlinkDirectories` symlinks listed directories into each worktree. [settings](https://code.claude.com/docs/en/settings-reference.md#worktree-symlinkdirectories)
 - **Verdict:** PARTIAL. `.worktreeinclude` copies; it has no `# link:` or `## links` syntax. The brief's symlink-in-`.worktreeinclude` idea would be a bcp invention, not a native feature. `worktree.symlinkDirectories` is the native symlink route.
-- **CANNOT-CONFIRM:** whether either mechanism applies to a worktree made by plain `git worktree add`, which is how bcp creates them: neither the worktrees guide nor the settings page says. The introduction version of both is also unconfirmed.
-- **In code (#44):** the same script, `scripts/worktree-start.mjs`.
-- **retire-when:** bcp creates worktrees through the native path (see WC6a), or the docs confirm `worktree.symlinkDirectories` applies to worktrees made with git.
+- **Confirmed by experiment (#37, 2026-11-11, Claude Code 2.1.322):** in a throwaway repo ignoring `.env`, `build/` and `linked/`, with a `.worktreeinclude` naming `.env` and `build/`, `claude --worktree X` copied `.env` and `build/` and left `linked/`; with `worktree.symlinkDirectories: ["linked"]` it also symlinked `linked`. A worktree made by plain `git worktree add` got neither, with and without the setting. Neither mechanism reaches the worktrees bcp creates. The introduction version of both is still unconfirmed.
+- **In code (#44, #37):** `scripts/worktree-start.mjs`. It reads `.worktreeinclude` itself, the file native reads: [worktreeinclude.md](worktreeinclude.md).
+- **retire-when:** bcp creates worktrees through the native path (see WC6a), or native `.worktreeinclude` and `worktree.symlinkDirectories` apply to worktrees made with git.
 - **checked:** 2026-11
 
 ### WC5b — preflight before creating a worktree (worktree-create, #42)
@@ -102,7 +102,8 @@ Rows that touch a native feature but can never retire. CG1/CG8 and HK2 were shim
 
 - **bcp (#42):** the base is no longer hard-coded; `worktree-create` takes it from the preflight (`default_branch` in the project context), and the other skills read the same fact.
 
-- Native location is `.claude/worktrees/`, and the native base is origin's default branch (`fresh`) or local HEAD (`head`). #37 decides the location. WC7 can use `fresh` natively only when bcp uses the native path.
+- Native location is `.claude/worktrees/`, and the native base is origin's default branch (`fresh`) or local HEAD (`head`). WC7 can use `fresh` natively only when bcp uses the native path.
+- **Decision (#37): bcp keeps `.worktrees/`.** bcp's worktrees are made by git, so native neither manages nor sweeps them (the docs: worktrees you made yourself with `git worktree add` are kept). Putting them under `.claude/worktrees/` would mix them with native-managed ones and buy nothing. Existing worktrees are untouched. Revisit when bcp creates worktrees natively (WC6a's retire-when); `.worktrees/` is also listed in this repo's `.gitignore`.
 
 ### RV2, RV6 — `review` and native `/review`
 

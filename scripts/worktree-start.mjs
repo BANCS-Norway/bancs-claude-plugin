@@ -5,8 +5,8 @@
 //   e.g.  44 refactor/44_split-mixed-skills .worktrees/refactor-44-split-mixed-skills
 //
 // Runs the preflight again (so it cannot be skipped), then creates the worktree from the base the
-// preflight names, links or installs node_modules and runs `direnv allow` where the project uses
-// direnv. Prints `base: <ref>`, one `ok:`, `warn:` or `FAIL:` line per check or step, then
+// preflight names, copies and links what the repo's .worktreeinclude names (docs/worktreeinclude.md),
+// links or installs node_modules and runs `direnv allow` where the project uses direnv. Prints `base: <ref>`, one `ok:`, `warn:` or `FAIL:` line per check or step, then
 // `start: done` or `start: failed`. A failed check creates nothing. Exit 1 on failure or bad arguments.
 import { readFileSync } from 'node:fs';
 import { startWorktree } from './lib/worktree.mjs';
