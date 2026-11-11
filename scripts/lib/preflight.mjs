@@ -8,7 +8,7 @@ import { git } from './repo.mjs';
 import { checkoutRoots, ensure } from './project-context.mjs';
 
 /** { ok, missing, out }: `gh` run with a time limit and no prompts. */
-function gh(cwd, ...args) {
+export function gh(cwd, ...args) {
   try {
     const out = execFileSync('gh', args, {
       cwd,
@@ -23,7 +23,10 @@ function gh(cwd, ...args) {
   }
 }
 
-const exists = (top, ref) => Boolean(git(top, 'rev-parse', '--verify', '--quiet', ref));
+export const exists = (top, ref) => Boolean(git(top, 'rev-parse', '--verify', '--quiet', ref));
+
+/** Whether git lists a worktree at the absolute path `abs`, even when its folder is gone. */
+export const isListed = (top, abs) => (git(top, 'worktree', 'list', '--porcelain') ?? '').split('\n').some((l) => l === `worktree ${abs}`);
 
 /**
  * Runs every check and reports each one: { base, results: [{ level, msg }], ok }. `level` is `ok`,
@@ -66,8 +69,7 @@ export function preflight({ cwd, issue, branch, path }) {
   else add('ok', `branch ${branch} is free (as of the last fetch)`);
 
   const abs = resolve(main, path);
-  const listed = (git(top, 'worktree', 'list', '--porcelain') ?? '').split('\n').some((l) => l === `worktree ${abs}`);
-  if (existsSync(abs) || listed) add('FAIL', `${path} already exists or is already a worktree`);
+  if (existsSync(abs) || isListed(top, abs)) add('FAIL', `${path} already exists or is already a worktree`);
   else add('ok', `${path} is free`);
 
   if (!auth.ok) {

@@ -43,7 +43,7 @@ Only go to GitHub and raise a flag when something is **inconsistent**:
 | Worktree exists but no matching issue in cache | Flag before proceeding |
 | Asked to clean up but PR is still open | Block and flag clearly |
 
-**Worktree missing but work log exists** = interrupted cleanup (resume mode). Skip *Detect resume mode*, *Confirm before removing*, and *Remove the worktree*; pick up from *Delete the local branch*.
+**Worktree missing but work log exists** = interrupted cleanup (resume mode). *Look at the worktree and the branch* tells you; when both are gone, skip to *Update issue labels*.
 
 When verification is needed:
 
@@ -57,26 +57,31 @@ If a PR exists and its state is unclear:
 gh pr view {PR-number} --json state,mergedAt
 ```
 
-## Detect resume mode
+## Look at the worktree and the branch
 
-Before confirming, check if the worktree and branch still exist:
+Ask git what is left, before asking the user anything. Read-only:
 
 ```bash
-git worktree list
-git branch --list {type}/{NNN}_{slug}
+node "${CLAUDE_PLUGIN_ROOT}/scripts/worktree-finish.mjs" <<'ARGS'
+status {NNN} {type}/{NNN}_{slug} .worktrees/{type}-{NNN}-{slug}
+ARGS
 ```
 
-If **neither exists** — this is a **resumed cleanup**. Skip *Confirm before removing* and *Remove the worktree*. Announce to the user:
+It prints `primary:` (the primary checkout), `worktree:` and `branch:` (`present` or `gone`), `dirty:`
+(only while the worktree exists) and `pr:` (what GitHub knows about the branch).
+
+If `worktree:` and `branch:` are **both gone**, this is a **resumed cleanup**. Say so and go to
+*Update issue labels*:
 
 ```
-Resuming cleanup for #NNN — worktree and branch already removed. Continuing from *Delete the local branch*.
+Resuming cleanup for #NNN — worktree and branch already removed. Continuing from the labels.
 ```
 
-If both exist — proceed with the confirmation prompt below.
+If `pr:` is not `merged`, stop and flag it: the branch has not been merged as far as GitHub knows.
 
 ## Confirm before removing
 
-Only reached if worktree/branch still exist.
+Only reached if the worktree or the branch still exists.
 
 Before showing the prompt, audit `CHECKLIST.md` in the worktree root. Any line matching `^- \[ \]` (plain unchecked item, not `~~struck~~`) is unresolved. If any exist, surface them in the prompt — the user may want to abort cleanup, finish the items, or explicitly descope them with a comment.
 
@@ -85,7 +90,7 @@ Ready to clean up #NNN:
 
   Worktree: .worktrees/{type}-{NNN}-{slug}
   Branch:   {type}/{NNN}_{slug}
-  ⚠️  Uncommitted changes present       ← only show if dirty
+  ⚠️  Uncommitted changes present       ← only if `dirty:` said yes
   ⚠️  Unresolved checklist items:       ← only show if any plain - [ ] lines remain
        - {item 1}
        - {item 2}
@@ -93,31 +98,31 @@ Ready to clean up #NNN:
 Remove worktree and delete branch?
 ```
 
-Wait for explicit confirmation before proceeding. The local `CHECKLIST.md` dies with the worktree in *Remove the worktree* — no separate cleanup needed.
+Wait for explicit confirmation before proceeding. The local `CHECKLIST.md` dies with the worktree — no
+separate cleanup needed.
 
-## Remove the worktree
+## Remove the worktree and the branch
 
-Run this as its own Bash call — `cd` to the main repo root first, then remove the worktree. The shell may be sitting inside the worktree being removed, which invalidates the CWD. Do NOT chain this with the next section in a single `&&` call; removing the worktree invalidates the CWD for anything that follows in the same call.
-
-```bash
-cd {main-repo-path} && git worktree remove .worktrees/{type}-{NNN}-{slug}
-```
-
-If that fails because the directory is already gone:
+One script does both, in order, and works from the primary checkout, so it does not matter that the
+shell may be sitting inside the worktree. Run it as its own Bash call:
 
 ```bash
-git worktree prune
+node "${CLAUDE_PLUGIN_ROOT}/scripts/worktree-finish.mjs" <<'ARGS'
+remove {NNN} {type}/{NNN}_{slug} .worktrees/{type}-{NNN}-{slug}
+ARGS
 ```
 
-## Delete the local branch
+It prints one `ok:` or `FAIL:` line per step, `primary: <path>`, then `finish: done` or `finish: failed`.
 
-Run as a separate Bash call. The `cd` from *Remove the worktree* persists automatically.
+- It removes the worktree only when git agrees it is clean, then deletes the branch with `-d`. A
+  squash merge makes git call the branch "not merged"; the script then uses `-D` only when GitHub
+  shows a merged PR whose head is exactly the branch tip. Nothing is lost that way.
+- On `finish: failed`, show the `FAIL:` line and stop. Do not run `git worktree remove --force` or
+  `git branch -D` yourself: the line says what is left and why.
+- Afterwards `cd` to the `primary:` path, so the next commands do not run inside the removed worktree.
 
-```bash
-git branch -d {type}/{NNN}_{slug}
-```
-
-If `-d` fails (not fully merged according to git), use `-D` only after confirming the PR is merged (*Verify issue and PR state* already covered this).
+If `${CLAUDE_PLUGIN_ROOT}` is unset (not run as an installed plugin), say the script cannot run and
+stop.
 
 ## Update issue labels
 

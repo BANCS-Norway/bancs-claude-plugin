@@ -43,6 +43,7 @@ Docs base: `https://code.claude.com/docs/en/`
 
 - **Native:** on exit, Claude checks for "changed or untracked files, uncommitted work inside checked-out submodules, and new commits", and a dirty worktree prompts keep or remove. [clean up](https://code.claude.com/docs/en/worktrees.md#clean-up-worktrees)
 - **Verdict:** PARTIAL. The docs say "These rules apply to worktrees Claude created with git", and that a worktree you made yourself with `git worktree add` is kept by the sweep. bcp creates its worktrees with `git worktree add` and removes them after a merge, from a session that is usually in the main checkout, so the native exit check does not reach them.
+- **In code (#44):** the `dirty:` line of `scripts/worktree-finish.mjs status`.
 - **retire-when:** bcp creates its worktrees natively (see WC6a) and works inside them until exit, or the docs extend the exit check to git-made worktrees.
 - **checked:** 2026-11
 
@@ -50,6 +51,7 @@ Docs base: `https://code.claude.com/docs/en/`
 
 - **Native:** removing on exit deletes "the worktree directory and its branch". Subagent worktrees with no changes are removed automatically, and a periodic sweep removes old ones after `cleanupPeriodDays`. [clean up](https://code.claude.com/docs/en/worktrees.md#clean-up-worktrees), [subagents](https://code.claude.com/docs/en/worktrees.md#clean-up-subagent-and-background-session-worktrees)
 - **Verdict:** PARTIAL. Nothing in the docs removes a worktree when its PR merges. The sweep removes stale agent worktrees whose PR was squash-merged (2.1.105), which covers subagent and background worktrees only. [reuse](https://code.claude.com/docs/en/worktrees.md#reuse-a-worktree-name)
+- **In code (#44):** `scripts/worktree-finish.mjs remove` removes the worktree, then the branch (`-d`, or `-D` once a squash merge is confirmed on GitHub with nothing unmerged). #38 decides how much of it native makes unnecessary.
 - **retire-when:** native removes a session worktree and its branch when the linked PR merges.
 - **checked:** 2026-11
 

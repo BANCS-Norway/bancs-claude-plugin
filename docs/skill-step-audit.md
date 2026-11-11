@@ -64,11 +64,11 @@ The last column names the issue that carries the change, where one exists.
 | WX1 | Identify the merged PR (`gh pr list --state merged`) | process | None | keep | |
 | WX2 | Load work log, legacy fallback | process | None | move | #40. Legacy fallback must keep working. |
 | WX3 | Verify issue and PR state on inconsistency | process | None | keep | |
-| WX4 | Detect resume mode (worktree/branch already gone) | process | None | keep | |
-| WX5a | Warn about uncommitted changes before removal | shim | PARTIAL; see native-overlap.md, WX5a | slim | #38 |
+| WX4 | Detect resume mode (worktree/branch already gone) | process | None | keep | #44: read from `worktree-finish status`. |
+| WX5a | Warn about uncommitted changes before removal | shim | PARTIAL; see native-overlap.md, WX5a | slim | #38. #44: the `dirty:` line of `worktree-finish status`. |
 | WX5b | Audit `CHECKLIST.md` for unresolved items, wait for confirmation | process | None | keep | |
-| WX6 | `git worktree remove` | shim | PARTIAL; see native-overlap.md, WX6 | slim | #38 |
-| WX7 | `git branch -d`, `-D` after PR check | shim | PARTIAL; see native-overlap.md, WX7 | slim | #38 |
+| WX6 | `git worktree remove` | shim | PARTIAL; see native-overlap.md, WX6 | slim | #38. #44: in code, `scripts/worktree-finish.mjs remove`. |
+| WX7 | `git branch -d`, `-D` after PR check | shim | PARTIAL; see native-overlap.md, WX7 | slim | #38. #44: in code. `-D` only when GitHub shows a merged PR whose head is the branch tip, so a branch with later commits is kept. |
 | WX8 | Remove the in-progress label | convention | None | keep | #42: the `in_progress_label` fact, as WC10. |
 | WX9 | Verify the issue closed, leave it open if not | process | None | keep | |
 | WX10 | Complete mission and move to `done/` | process | None | keep | |
