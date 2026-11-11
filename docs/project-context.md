@@ -25,6 +25,7 @@ the main checkout. The facts are one JSON block; edit them with `/bcp:context`, 
 | `test_command` | a command, or `unknown` | `scripts.test` in package.json (`npm`, `pnpm`, `yarn` or `bun` by lockfile), a Makefile `test:` target, `Cargo.toml`, `go.mod` | those inputs |
 | `repo` | `owner/name`, or `unknown` | the origin URL, only when it is a host URL | the origin URL |
 | `pr_title` | `conventional`, `unknown`, or a format you set | a commitlint config (file or `commitlint` key in package.json), or a workflow using `action-semantic-pull-request` | those inputs |
+| `commit_types` | the allowed types, space separated (`feat fix docs`), or `unknown` | `type-enum` in a data commitlint config (`.commitlintrc`, `.commitlintrc.json` or the `commitlint` key in package.json); a config that extends `@commitlint/config-conventional` with no `type-enum` gets that preset's types; `scope-enum` is recorded as `scopes`. A `.js`/`.ts` config is code and is not run; YAML is not read; any other shared config is not followed. Those are `unknown` | the commitlint config files (their content) and the package.json key |
 | `in_progress_label` | a label name, `none`, or `unknown` | `gh label list`: the `status: in progress` label, else the one label with "in progress" in its name | the origin URL |
 
 `release` also records `bumps`: which commit types bump a version under that mechanism.
@@ -67,7 +68,7 @@ The code is `scripts/lib/project-context.mjs`; gates call `scripts/project-conte
 
 | Fact | Read by |
 | --- | --- |
-| `release` | `commit-guide` |
+| `release`, `commit_types` | `commit-guide` |
 | `default_branch` | `worktree-create` (through the preflight), `worktree-resume`, `pr-create` |
 | `direnv` | `worktree-create` |
 | `in_progress_label` | `worktree-create`, `worktree-cleanup`, `issues` |

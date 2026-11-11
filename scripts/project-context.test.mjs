@@ -183,6 +183,44 @@ test('pr_title: conventional from a commitlint config, a package.json key or a s
   assert.match(viaAction.from, /title\.yml/);
 });
 
+test('commit_types: the type-enum of a data config, with scope-enum when it has one', () => {
+  const types = (files) => factOf('commit_types', repo(files));
+  const enumed = types({ '.commitlintrc.json': JSON.stringify({ extends: ['@commitlint/config-conventional'], rules: { 'type-enum': [2, 'always', ['feat', 'fix', 'perf']], 'scope-enum': [2, 'always', ['api', 'ui']] } }) });
+  assert.equal(enumed.value, 'feat fix perf');
+  assert.deepEqual(enumed.scopes, ['api', 'ui']);
+  assert.match(enumed.from, /type-enum in \.commitlintrc\.json/);
+  assert.equal(types({ 'package.json': pkg({ commitlint: { rules: { 'type-enum': [2, 'always', ['feat', 'fix']] } } }) }).value, 'feat fix');
+  assert.equal(types({ '.commitlintrc.json': JSON.stringify({ rules: { 'type-enum': [2, 'always', ['feat']] } }) }).scopes, undefined);
+});
+
+test('commit_types: config-conventional without a type-enum means its default types, which include style', () => {
+  const found = factOf('commit_types', repo({ '.commitlintrc.json': JSON.stringify({ extends: '@commitlint/config-conventional' }) }));
+  assert.deepEqual(found.value.split(' '), ['build', 'chore', 'ci', 'docs', 'feat', 'fix', 'perf', 'refactor', 'revert', 'style', 'test']);
+  // a type-enum that is switched off (level 0) does not restrict: the extended defaults apply
+  const off = factOf('commit_types', repo({ '.commitlintrc.json': JSON.stringify({ extends: ['@commitlint/config-conventional'], rules: { 'type-enum': [0, 'always', ['feat']] } }) }));
+  assert.match(off.value, /\bstyle\b/);
+});
+
+test('commit_types: unknown, never a default, when the types cannot be read', () => {
+  const types = (files) => factOf('commit_types', repo(files));
+  const none = types({ 'README.md': 'x' });
+  assert.equal(none.value, 'unknown');
+  assert.match(none.from, /no commitlint config/);
+  assert.equal(types({ 'package.json': pkg({ name: 'vitepress-site', devDependencies: { vitepress: '1' } }) }).value, 'unknown');
+  const code = types({ 'commitlint.config.js': 'module.exports = { rules: { "type-enum": [2, "always", ["feat"]] } };' });
+  assert.equal(code.value, 'unknown');
+  assert.match(code.from, /is code and is not run/);
+  assert.equal(types({ '.commitlintrc.yml': 'extends: [x]' }).value, 'unknown');
+  assert.equal(types({ '.commitlintrc.json': JSON.stringify({ extends: ['@acme/shared'] }) }).value, 'unknown');
+  assert.equal(types({ '.commitlintrc.json': JSON.stringify({ rules: { 'type-enum': [2, 'never', ['wip']] } }) }).value, 'unknown');
+  assert.equal(types({ '.commitlintrc.json': '{ not json' }).value, 'unknown');
+});
+
+test('commit_types: a list set by hand is validated and normalised', () => {
+  assert.equal(FACTS.commit_types.parse('feat, fix  docs'), 'feat fix docs');
+  for (const bad of ['Feat fix', 'feat(api)', ',', '']) assert.throws(() => FACTS.commit_types.parse(bad), /lowercase types/, bad);
+});
+
 test('pr_title: unknown, not a guess, when nothing says how titles are checked', () => {
   assert.equal(factOf('pr_title', repo({ 'README.md': 'x' })).value, 'unknown');
   assert.equal(factOf('pr_title', repo({ '.github/workflows/ci.yml': 'on: push' })).value, 'unknown');

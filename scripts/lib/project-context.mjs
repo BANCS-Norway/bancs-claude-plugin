@@ -205,6 +205,50 @@ function detectPrTitle(i) {
     : { value: 'unknown', from: 'no commitlint config or semantic PR title check found' };
 }
 
+// What commitlint allows as a commit type (and scope), read from the config as data. A config that is
+// code (.js, .ts) is never executed: that is `unknown`, and the user sets the list by hand.
+const CONVENTIONAL_TYPES = ['build', 'chore', 'ci', 'docs', 'feat', 'fix', 'perf', 'refactor', 'revert', 'style', 'test'];
+const COMMITLINT_DATA = COMMITLINT.filter((f) => !/\.(?:c?js|mjs|ts)$/.test(f));
+
+function commitTypeInputs(root) {
+  const { pkg } = readPackage(root);
+  return {
+    files: Object.fromEntries(COMMITLINT.filter((f) => existsSync(join(root, f))).map((f) => [f, read(root, f) ?? null])),
+    pkgKey: pkg && 'commitlint' in pkg ? pkg.commitlint : null,
+  };
+}
+
+/** The list of a `[level, 'always', [...]]` rule, `null` when the rule is absent or off. */
+function enumRule(config, name) {
+  const [level, applicable, list] = config?.rules?.[name] ?? [];
+  return level > 0 && applicable === 'always' && Array.isArray(list) && list.every((x) => typeof x === 'string') ? list : null;
+}
+
+function detectCommitTypes(i) {
+  const [file] = Object.keys(i.files);
+  let config = i.pkgKey;
+  let from = 'a "commitlint" key in package.json';
+  if (file) {
+    from = file;
+    if (!COMMITLINT_DATA.includes(file)) return { value: 'unknown', from: `${file} is code and is not run` };
+    try {
+      config = JSON.parse(i.files[file]);
+    } catch {
+      return { value: 'unknown', from: `${file} is not JSON (YAML?) and is not read` };
+    }
+  }
+  if (config === null || typeof config !== 'object') return { value: 'unknown', from: 'no commitlint config found' };
+  const scopes = enumRule(config, 'scope-enum');
+  const extras = scopes ? { scopes } : {};
+  const types = enumRule(config, 'type-enum');
+  if (types) return { value: types.join(' '), from: `type-enum in ${from}`, ...extras };
+  const extended = [config.extends].flat().filter(Boolean);
+  if (extended.includes('@commitlint/config-conventional')) {
+    return { value: CONVENTIONAL_TYPES.join(' '), from: `${from} extends @commitlint/config-conventional (its default types)`, ...extras };
+  }
+  return { value: 'unknown', from: `${from} sets no type-enum and extends ${extended.join(', ') || 'nothing'}, which is not read` };
+}
+
 // The label a skill puts on an issue it starts and takes off when it is done. Asked of GitHub, so
 // every answer except a single clear match is transient: the label may be created, or gh may be
 // offline, and neither should be remembered as a fact.
@@ -292,6 +336,15 @@ export const FACTS = {
     detect: detectPrTitle,
     parse: anyText,
   },
+  commit_types: {
+    inputs: commitTypeInputs,
+    detect: detectCommitTypes,
+    parse: (text) => {
+      const types = text.split(/[\s,]+/).filter(Boolean);
+      if (!types.length || !types.every((t) => /^[a-z][a-z0-9-]*$/.test(t))) throw new Error('commit_types is a list of lowercase types, e.g. feat fix docs');
+      return types.join(' ');
+    },
+  },
   in_progress_label: {
     inputs: (root) => ({ remote: git(root, 'remote', 'get-url', 'origin') ?? null }),
     detect: detectInProgressLabel,
@@ -301,13 +354,13 @@ export const FACTS = {
 
 // ---- the file -----------------------------------------------------------------------------
 
-const POINTER = '- [Project context](project_context.md) — release, direnv, CI, default branch, test command, repo, PR title format and in-progress label, detected once for every bcp gate; /bcp:context to confirm or correct';
+const POINTER = '- [Project context](project_context.md) — release, direnv, CI, default branch, test command, repo, PR title format, commit types and in-progress label, detected once for every bcp gate; /bcp:context to confirm or correct';
 
 function render(facts) {
   return [
     '---',
     'name: project_context',
-    'description: Project facts bcp detected once (release, direnv, CI, default branch, test command, repo, PR title format, in-progress label); every gate reads them. Confirm or correct with /bcp:context.',
+    'description: Project facts bcp detected once (release, direnv, CI, default branch, test command, repo, PR title format, commit types, in-progress label); every gate reads them. Confirm or correct with /bcp:context.',
     'type: project',
     '---',
     '',

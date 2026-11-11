@@ -62,3 +62,10 @@ test('the exemptions and the pr-title scope are what they say', () => {
   assert.deepEqual(findLiterals('setup-contribution', 'status: in progress').map((f) => f.rule), ['label']);
   assert.deepEqual(findLiterals('commit-guide', '{type}({scope}): {description}'), []);
 });
+
+test('commit-guide asks the project context for the commit types and the release mechanism', () => {
+  const text = readFileSync(join(skillsDir, 'commit-guide', 'SKILL.md'), 'utf8');
+  for (const fact of ['commit_types', 'release']) assert.match(text, new RegExp(`^get ${fact}$`, 'm'), `get ${fact}`);
+  // unknown is asked about, not defaulted (#41)
+  assert.match(text, /do not propose a\s+type from memory/);
+});
