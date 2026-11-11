@@ -1,5 +1,5 @@
 ---
-description: Show the project facts bcp detected once (release, direnv, CI directory, default branch, test command, repo), confirm one, correct one, or reset one.
+description: Show the project facts bcp detected once (release, direnv, CI directory, default branch, test command, repo, PR title format, in-progress label), confirm one, correct one, or reset one.
 argument-hint: [show | get <fact> | confirm <fact> [value] | reset <fact>]
 allowed-tools: Bash
 kind: process
@@ -9,11 +9,12 @@ checked: 2026-11
 # /bcp:context — the facts every gate reads
 
 The gates (the skills) used to guess what kind of project they ran in, and repeated a wrong guess
-on every run. bcp now detects six facts once per project and records them in the project's memory
+on every run. bcp now detects eight facts once per project and records them in the project's memory
 folder (`project_context.md`), where every gate reads the same answer:
 
 `release` (`semantic-release`, `vitepress`, `none` or `unknown`, and which commit types bump a
-version), `direnv`, `ci_dir`, `default_branch`, `test_command`, `repo`.
+version), `direnv`, `ci_dir`, `default_branch`, `test_command`, `repo`, `pr_title` and
+`in_progress_label`.
 
 A fact that cannot be detected is `unknown`; it is never a guess. A detected fact is **unconfirmed**
 and is detected again when the files it came from change. A **confirmed** fact is never touched by

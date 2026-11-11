@@ -29,6 +29,14 @@ Docs base: `https://code.claude.com/docs/en/`
 - **retire-when:** bcp creates worktrees through the native path (see WC6a), or the docs confirm `worktree.symlinkDirectories` applies to worktrees made with git.
 - **checked:** 2026-11
 
+### WC5b — preflight before creating a worktree (worktree-create, #42)
+
+- **Native:** `--worktree` reuses a worktree of the same name instead of creating a second, refuses a worktree "leftover" or one that belongs to a different repository, and starts from origin's default branch, falling back to local HEAD when origin/HEAD is neither cached nor fetchable. [reuse](https://code.claude.com/docs/en/worktrees.md#reuse-a-worktree-name), [base](https://code.claude.com/docs/en/worktrees.md#choose-the-base-branch) The changelog adds default-branch fixes for bare repositories (2.1.300, 2.1.305).
+- **Verdict:** PARTIAL. The docs do not describe a check for a branch name that already exists locally or on origin, an open PR already covering the issue, a missing default branch (the fallback to local HEAD is silent, so the base can be a feature branch), or an unauthenticated `gh`. Checked against the worktrees page and the changelog through 2.1.322; the cli-reference and tools-reference pages were only partly readable.
+- **Gap it fills:** `scripts/worktree-preflight.mjs` runs those four checks and the path check before any worktree, branch or label is created, and says which base to use.
+- **retire-when:** native worktree creation refuses a taken branch name and reports an existing PR for the issue, and no longer falls back silently to local HEAD.
+- **checked:** 2026-11
+
 ### WX5a — warn about uncommitted changes before removal (worktree-cleanup)
 
 - **Native:** on exit, Claude checks for "changed or untracked files, uncommitted work inside checked-out submodules, and new commits", and a dirty worktree prompts keep or remove. [clean up](https://code.claude.com/docs/en/worktrees.md#clean-up-worktrees)
@@ -90,6 +98,8 @@ Rows that touch a native feature but can never retire. CG1/CG8 and HK2 were shim
 - **retire-when:** not applicable.
 
 ### WC6b, WC7 — `.worktrees/` location and the `main` base
+
+- **bcp (#42):** the base is no longer hard-coded; `worktree-create` takes it from the preflight (`default_branch` in the project context), and the other skills read the same fact.
 
 - Native location is `.claude/worktrees/`, and the native base is origin's default branch (`fresh`) or local HEAD (`head`). #37 decides the location. WC7 can use `fresh` natively only when bcp uses the native path.
 

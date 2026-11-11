@@ -24,11 +24,18 @@ the main checkout. The facts are one JSON block; edit them with `/bcp:context`, 
 | `default_branch` | a branch name, or `unknown` | `origin/HEAD`, else `git ls-remote --symref origin HEAD` | the origin URL and `origin/HEAD` |
 | `test_command` | a command, or `unknown` | `scripts.test` in package.json (`npm`, `pnpm`, `yarn` or `bun` by lockfile), a Makefile `test:` target, `Cargo.toml`, `go.mod` | those inputs |
 | `repo` | `owner/name`, or `unknown` | the origin URL, only when it is a host URL | the origin URL |
+| `pr_title` | `conventional`, `unknown`, or a format you set | a commitlint config (file or `commitlint` key in package.json), or a workflow using `action-semantic-pull-request` | those inputs |
+| `in_progress_label` | a label name, `none`, or `unknown` | `gh label list`: the `status: in progress` label, else the one label with "in progress" in its name | the origin URL |
 
 `release` also records `bumps`: which commit types bump a version under that mechanism.
 `semantic-release` lists its defaults (`feat` minor, `fix` and `perf` patch, `BREAKING CHANGE`
 major); a `releaseRules` entry in the project's release config overrides them, and detection does
 not read it. `vitepress` lists `feat` minor, `fix` and `style` patch.
+
+`in_progress_label` asks GitHub, so only a clear single match is stored. No matching label (`none`),
+several matches, or a `gh` that does not answer are shown but not stored and asked again next time,
+because the label may be created later. A repo that is not on github.com has `none` settled
+without asking. If a stored label is later renamed, `reset in_progress_label` detects it again.
 
 Each entry also records what it was detected from, the date, `confirmed`, and a fingerprint (a hash
 of the inputs above).
@@ -44,8 +51,8 @@ of the inputs above).
 - **Detected again only when the inputs change.** Reading the fingerprint is cheap; detection runs
   only on a miss, so once the file exists no gate detects again.
 - **A failure that may pass is not stored.** If the remote does not answer, `default_branch` is
-  shown as `unknown` and asked again next time. That is the one network call, five seconds at most,
-  never prompting for credentials.
+  shown as `unknown` and asked again next time (five seconds at most, never prompting for
+  credentials). `in_progress_label` works the same way through `gh` (ten seconds at most).
 - **Atomic writes.** Written to a temp file and renamed, so two clones writing at once leave one
   whole file. A file that does not parse is moved aside as `project_context.md.corrupt`, never
   overwritten.
@@ -58,9 +65,27 @@ The code is `scripts/lib/project-context.mjs`; gates call `scripts/project-conte
 
 ## Who reads it
 
-Only `commit-guide` reads `release` so far. The other five facts are stored and tested but no gate
-reads them yet: `worktree-create` and the other skills still check for themselves
-([#42](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/42) moves them over).
+| Fact | Read by |
+| --- | --- |
+| `release` | `commit-guide` |
+| `default_branch` | `worktree-create` (through the preflight), `worktree-resume`, `pr-create` |
+| `direnv` | `worktree-create` |
+| `in_progress_label` | `worktree-create`, `worktree-cleanup`, `issues` |
+| `pr_title` | `pr-create` |
+| `ci_dir`, `test_command`, `repo` | nothing yet |
+
+Where a skill needs a fact and gets `unknown` or `none`, it says so and asks or skips; it never
+falls back to a default like `main` or `status: in progress`. `scripts/skill-literals.test.mjs`
+fails if a skill writes one of those literals back
+([#42](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/42)).
+
+## The preflight
+
+`worktree-create` runs `scripts/worktree-preflight.mjs <issue> <branch> <path>` before it creates
+anything. It checks that `gh` is signed in, that the default branch exists (and warns when the
+local one is behind origin), that the branch name and worktree path are free, and that no open PR
+already covers the issue, and it prints the ref to start from. It is a shim for what native
+worktrees do not check; see `WC5b` in [native-overlap.md](native-overlap.md).
 
 ## Native check
 

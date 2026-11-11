@@ -121,9 +121,16 @@ If `-d` fails (not fully merged according to git), use `-D` only after confirmin
 
 ## Update issue labels
 
+The label's name is the repo's, so ask for it:
+
 ```bash
-gh issue edit {NNN} --remove-label "status: in progress"
+node "${CLAUDE_PLUGIN_ROOT}/scripts/project-context.mjs" <<'ARGS'
+get in_progress_label
+ARGS
 ```
+
+If `in_progress_label:` is a name, remove it: `gh issue edit {NNN} --remove-label "{label}"`. If it
+is `none` or `unknown`, remove nothing and say so; do not guess a label name.
 
 The PR closing the issue should have already closed it automatically — verify:
 
@@ -211,7 +218,7 @@ Cleaned up #NNN.
   ✓ Issue cache — render refreshes from GitHub on next sync
   ✓ Mission complete
 
-Back on main. What's next?
+Back in the main checkout. What's next?
 ```
 
 The "What's next?" is an invitation for the `issues` skill to pick up naturally.
