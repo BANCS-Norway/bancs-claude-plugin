@@ -6,7 +6,7 @@ import { appendFileSync, existsSync, readFileSync, symlinkSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { git } from './repo.mjs';
 import { checkoutRoots, ensure } from './project-context.mjs';
-import { preflight } from './preflight.mjs';
+import { exists, gh, isListed, preflight } from './preflight.mjs';
 
 /** { ok, out } for a command run with no prompts and a time limit; `out` is the error text on failure. */
 function run(cwd, ms, cmd, ...args) {
@@ -65,4 +65,92 @@ export function startWorktree({ cwd, issue, branch, path }) {
     else add('warn', allowed.missing ? 'the project uses direnv but it is not installed; the worktree is not allowed' : `direnv allow failed (${allowed.out})`);
   }
   return { base: found.base, results, ok: true, created: true };
+}
+
+// ---- finishing: after the PR is merged -------------------------------------------------------
+
+/** The PRs that have `branch` as their head, newest first: an array, or null when gh did not answer. */
+function prsFor(main, branch, state) {
+  const out = gh(main, 'pr', 'list', '--head', branch, '--state', state, '--limit', '5', '--json', 'number,state,mergedAt,headRefOid');
+  try {
+    const list = JSON.parse(out.out);
+    return Array.isArray(list) ? list : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * What cleanup needs to know before it asks: { lines } of `key: value`. Read-only. `worktree` and
+ * `branch` are `present` or `gone` (both gone means an interrupted cleanup), `dirty` says whether the
+ * worktree has changes git would refuse to remove, `pr` says what GitHub knows about the branch.
+ */
+export function worktreeStatus({ cwd, branch, path }) {
+  const roots = checkoutRoots(cwd);
+  if (!roots) return { ok: false, lines: ['FAIL: not in a git repository'] };
+  const { main } = roots;
+  const abs = resolve(main, path);
+  const lines = [`primary: ${main}`];
+  const present = existsSync(abs);
+  lines.push(`worktree: ${present ? 'present' : isListed(main, abs) ? 'gone (git still lists it)' : 'gone'}`);
+  lines.push(`branch: ${exists(main, `refs/heads/${branch}`) ? 'present' : 'gone'}`);
+  if (present) {
+    const changes = (git(abs, 'status', '--porcelain') ?? '').split('\n').filter(Boolean).length;
+    lines.push(changes ? `dirty: yes (${changes} change${changes === 1 ? '' : 's'})` : 'dirty: no');
+  }
+  const prs = prsFor(main, branch, 'all');
+  const pr = prs?.find((p) => p?.mergedAt) ?? prs?.[0];
+  lines.push(!prs ? 'pr: unknown (gh did not answer)'
+    : !pr ? 'pr: none'
+      : `pr: ${pr.mergedAt ? 'merged' : String(pr.state).toLowerCase()} #${pr.number}`);
+  return { ok: true, lines };
+}
+
+/**
+ * Removes the worktree, then the local branch. Each step that is already done is `ok` (a cleanup that
+ * was interrupted resumes). The worktree is removed only when git agrees it is clean. The branch is
+ * deleted with `-d`; a squash merge makes git say "not merged", so `-D` follows only when GitHub shows
+ * a merged PR whose head is exactly the branch tip (nothing is lost). Returns { results, ok, main }.
+ */
+export function finishWorktree({ cwd, branch, path }) {
+  const roots = checkoutRoots(cwd);
+  if (!roots) return { ok: false, results: [{ level: 'FAIL', msg: 'not in a git repository' }] };
+  const { main } = roots;
+  const results = [];
+  const add = (level, msg) => results.push({ level, msg });
+  const abs = resolve(main, path);
+
+  if (existsSync(abs)) {
+    const removed = run(main, 60000, 'git', 'worktree', 'remove', path);
+    if (!removed.ok) {
+      add('FAIL', `git worktree remove failed: ${removed.out}; commit or discard the changes, then run it again`);
+      return { results, ok: false, main };
+    }
+    add('ok', `worktree ${path} removed`);
+  } else if (isListed(main, abs)) {
+    run(main, 60000, 'git', 'worktree', 'prune');
+    add('ok', `worktree ${path} was already gone; pruned`);
+  } else {
+    add('ok', `worktree ${path} already gone`);
+  }
+
+  if (!exists(main, `refs/heads/${branch}`)) {
+    add('ok', `branch ${branch} already gone`);
+    return { results, ok: true, main };
+  }
+  if (run(main, 15000, 'git', 'branch', '-d', branch).ok) {
+    add('ok', `branch ${branch} deleted`);
+    return { results, ok: true, main };
+  }
+  const tip = git(main, 'rev-parse', `refs/heads/${branch}`);
+  const prs = prsFor(main, branch, 'merged');
+  const merged = prs?.find((p) => p?.mergedAt && p.headRefOid === tip);
+  if (merged && run(main, 15000, 'git', 'branch', '-D', branch).ok) {
+    add('ok', `branch ${branch} deleted (PR #${merged.number} was squash-merged: git does not see it as merged, GitHub does)`);
+    return { results, ok: true, main };
+  }
+  add('FAIL', prs
+    ? `branch ${branch} is not merged and no merged PR ends at its tip (${tip?.slice(0, 7)}); it may hold commits the PR does not. Not deleted`
+    : `branch ${branch} is not merged according to git, and gh did not answer, so a squash merge cannot be confirmed. Not deleted`);
+  return { results, ok: false, main };
 }
