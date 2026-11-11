@@ -74,7 +74,7 @@ The last column names the issue that carries the change, where one exists.
 | WX10 | Complete mission and move to `done/` | process | None | keep | |
 | WX11 | Tick PR test-plan boxes | process | None | keep | |
 | WX12 | Remove `memory/issues/{NNN}/` (and legacy file) | process | None | keep | #40: as WR1. |
-| WX13 | "Issue cache — nothing to do" section | process | None | retire | A step that says do nothing. Keep one line in the design note. |
+| WX13 | "Issue cache — nothing to do" section | process | None | retire | #38 removed it. The rule it carried (the cache is a render, never hand-edited) is in the `issues` skill, step 2. |
 | WX14 | Confirm summary | process | None | keep | |
 | WX15 | Trigger: phrases ("merged", "cleanup") | process | None | enforce | #43 tags it; a merged-PR check could replace the phrase. |
 

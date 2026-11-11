@@ -204,12 +204,6 @@ Also remove the legacy flat file if it exists (pre-folder worktrees):
 No `MEMORY.md` edit is needed — active work was never pointered there; the folder *was* the
 index, and removing it drops the issue from the next `issues` scan.
 
-## Issue cache — nothing to do
-
-`project_issues.md` is a disposable render of GitHub state — do **not** hand-remove the row.
-The PR merge already closed the issue on GitHub, so the next `issues` sync regenerates the
-render without it. Hand-editing would only reintroduce the shared-write race this design removes.
-
 ## Confirm
 
 ```
@@ -220,7 +214,6 @@ Cleaned up #NNN.
   ✓ Issue labels updated
   ✓ PR test plan checked off
   ✓ Work log removed
-  ✓ Issue cache — render refreshes from GitHub on next sync
   ✓ Mission complete
 
 Back in the main checkout. What's next?
