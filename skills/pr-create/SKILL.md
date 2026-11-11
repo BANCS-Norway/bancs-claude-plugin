@@ -12,7 +12,15 @@ The branch is pushed. You create the PR, update the issue cache, and update the 
 
 ## Load context
 
-Read the issue work log: `~/.claude/projects/{project-slug}/memory/issues/{NNN}/log.md`
+Find and read the issue work log:
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/work-log.mjs" <<'ARGS'
+path {NNN}
+ARGS
+```
+
+`path: <file>` is the log to read; `path: none` means there is none.
 
 Extract:
 
@@ -109,7 +117,7 @@ reintroduce the shared-write race this design removes.
 
 ## Update the issue work log
 
-Add to `memory/issues/{NNN}/log.md`:
+Add to the log file you loaded above (`work-log.mjs path {NNN}`):
 
 ```markdown
 ## PR

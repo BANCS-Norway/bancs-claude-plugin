@@ -32,16 +32,16 @@ Three layouts exist. Where the table below says a skill reads a layout, it does;
 
 | Layout | Written by | Read by |
 | --- | --- | --- |
-| `memory/issues/{NNN}/log.md` | the skills, now | `worktree-resume`, `worktree-cleanup`, `issues`, `commit-guide`, `pr-create` |
-| `memory/issue-{NNN}.md` (flat, with frontmatter) | the skills before the per-issue folder | `worktree-resume`, `worktree-cleanup`, `issues` |
-| `memory/issues/{NNN}/work-log.md` | by hand | nothing |
+| `memory/issues/{NNN}/log.md` | the skills, now | every skill, through `scripts/work-log.mjs path` |
+| `memory/issue-{NNN}.md` (flat, with frontmatter) | the skills before the per-issue folder | the same |
+| `memory/issues/{NNN}/work-log.md` | by hand | the same; `log.md` wins when both exist |
 
 ## Migration path
 
-**There is nothing to migrate.** New logs use `issues/{NNN}/log.md`. A legacy log stays where it is, is read as it is, and is removed by `worktree-cleanup` with its issue. A hand-made `work-log.md` is not read by any skill; rename it to `log.md` to have a skill pick it up.
+**There is nothing to migrate.** New logs use `issues/{NNN}/log.md`. A legacy log stays where it is, is read as it is (`work-log.mjs path` finds all three layouts), and is removed by `worktree-cleanup` with its issue.
 
 **If the logs ever have to move** (Claude Code starts rewriting unknown files, or the folder stops being shared): copy `issues/` to the new place, make the skills read the new place first and the old one as a fallback for one release, then stop reading the old one. Copy, never move, so an interrupted session can still find its log.
 
-## Known defect
+## One script computes the folder
 
-The skills derive `{project-slug}` from the current working directory. A session that starts inside a worktree computes a different folder from the shared one. `project-context` avoids this by using the main checkout. [#69](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/69) adds one script that computes the folder and reads the layouts above.
+`scripts/work-log.mjs` ([#69](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/69)) is the only place the folder is computed, from the main checkout (as `project-context` does), so a session started inside a worktree and one in the primary clone share the same logs. Skills call `memory`, `path <issue>`, `create <issue>`, `active` and `remove <issue>` and never spell the path; `npm run test:literals` fails when one does.

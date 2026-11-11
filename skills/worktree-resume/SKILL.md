@@ -12,10 +12,16 @@ You orient Claude and the user quickly after an interrupted session. The worktre
 
 ## Load the issue work log
 
-Read `~/.claude/projects/{project-slug}/memory/issues/{NNN}/log.md`, or — if that doesn't
-exist — the legacy flat `~/.claude/projects/{project-slug}/memory/issue-{NNN}.md` (worktrees
-created before the per-issue-folder change). This is a pure read: don't move or rewrite the
-file here. The legacy flat file is removed at teardown by `worktree-cleanup`.
+Find the log, whichever layout it is in (the script reads them all, the current layout first):
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/work-log.mjs" <<'ARGS'
+path {NNN}
+ARGS
+```
+
+Read the file named by `path: <file>`. `path: none` means no log. This is a pure read: don't move or
+rewrite the file here. `worktree-cleanup` removes it at teardown.
 
 Extract:
 
@@ -120,9 +126,9 @@ If the git state looks messy (conflicts, detached HEAD, etc.), flag it clearly b
 
 ## Update the work log
 
-Update the `Current State` section of **the work log you loaded above** (the new
-`memory/issues/{NNN}/log.md`, or the legacy flat file if that's what existed) to reflect what
-was found — write back to the same file, don't split it across both locations:
+Update the `Current State` section of **the work log you loaded above** (the file
+`work-log.mjs path {NNN}` printed, whichever layout it is in) to reflect what was found — write
+back to the same file, don't split it across locations:
 
 ```markdown
 ## Current State

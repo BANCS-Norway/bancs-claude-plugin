@@ -12,9 +12,15 @@ You are the entry point for every coding session. Your job is not just to sync i
 
 ## Step 1 — Determine project slug and memory path
 
-From the current working directory, derive the project slug: replace `/` with `-`, strip leading `/`.
+Ask the script for the memory folder. It comes from the main checkout, so it is the same inside a worktree:
 
-Memory path: `~/.claude/projects/{project-slug}/memory/`
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/work-log.mjs" <<'ARGS'
+memory
+ARGS
+```
+
+Memory path: the `memory:` value.
 Cache file: `{memory-path}/project_issues.md`
 
 ## Step 2 — Regenerate the cache (it is a render, not a database)
@@ -48,13 +54,17 @@ never a correctness loss.
 
 ## Step 3 — Check for active work logs
 
-Scan `memory/issues/` — each subfolder `memory/issues/<N>/` is an issue with an active worktree
-from a previous session. **The directory listing is the index of active work** (there is no
-shared index file to read). Read each `memory/issues/<N>/log.md` for context. Note them — they
-take priority in the assessment.
+List the active work logs:
 
-(Legacy: also pick up any flat `memory/issue-*.md` files from before the per-issue-folder
-change, and treat them the same.)
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/work-log.mjs" <<'ARGS'
+active
+ARGS
+```
+
+Each line is `<issue> <file>`: an issue with an active worktree from a previous session, in any
+layout. **That listing is the index of active work** (there is no shared index file to read). Read
+each file for context. Note them — they take priority in the assessment.
 
 Also run `git worktree list` to see what worktrees currently exist.
 
