@@ -115,7 +115,7 @@ ARGS
 It prints one `ok:` or `FAIL:` line per step, `primary: <path>`, then `finish: done` or `finish: failed`.
 
 - It removes the worktree only when git agrees it is clean, then deletes the branch with `-d`. A
-  squash merge makes git call the branch "not merged"; the script then uses `-D` only when GitHub
+  squash or rebase merge makes git call the branch "not merged"; the script then uses `-D` only when GitHub
   shows a merged PR whose head is exactly the branch tip. Nothing is lost that way.
 - On `finish: failed`, show the `FAIL:` line and stop. Do not run `git worktree remove --force` or
   `git branch -D` yourself: the line says what is left and why.

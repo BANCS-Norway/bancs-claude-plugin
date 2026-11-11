@@ -7,7 +7,7 @@
 // status   Read-only. Prints `key: value` lines: primary (the primary checkout), worktree and branch
 //          (`present` or `gone`; both gone means an interrupted cleanup), dirty, pr. Exit 0.
 // remove   Removes the worktree (git refuses a dirty one), then deletes the local branch: `-d`, and
-//          `-D` only after a squash merge is confirmed on GitHub with nothing unmerged on the branch.
+//          `-D` only after a merged PR is confirmed on GitHub with nothing unmerged on the branch.
 //          Prints one `ok:` or `FAIL:` line per step, then `finish: done` or `finish: failed`.
 //          Exit 1 on a failed step. Run it from anywhere: it works from the primary checkout.
 import { readFileSync } from 'node:fs';

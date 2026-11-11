@@ -194,7 +194,7 @@ export function worktreeStatus({ cwd, branch, path }) {
 /**
  * Removes the worktree, then the local branch. Each step that is already done is `ok` (a cleanup that
  * was interrupted resumes). The worktree is removed only when git agrees it is clean. The branch is
- * deleted with `-d`; a squash merge makes git say "not merged", so `-D` follows only when GitHub shows
+ * deleted with `-d`; a squash or rebase merge makes git say "not merged", so `-D` follows only when GitHub shows
  * a merged PR whose head is exactly the branch tip (nothing is lost). Returns { results, ok, main }.
  */
 export function finishWorktree({ cwd, branch, path }) {
@@ -231,11 +231,11 @@ export function finishWorktree({ cwd, branch, path }) {
   const prs = prsFor(main, branch, 'merged');
   const merged = prs?.find((p) => p?.mergedAt && p.headRefOid === tip);
   if (merged && run(main, 15000, 'git', 'branch', '-D', branch).ok) {
-    add('ok', `branch ${branch} deleted (PR #${merged.number} was squash-merged: git does not see it as merged, GitHub does)`);
+    add('ok', `branch ${branch} deleted (PR #${merged.number} is merged on GitHub; git does not see the branch as merged)`);
     return { results, ok: true, main };
   }
   add('FAIL', prs
     ? `branch ${branch} is not merged and no merged PR ends at its tip (${tip?.slice(0, 7)}); it may hold commits the PR does not. Not deleted`
-    : `branch ${branch} is not merged according to git, and gh did not answer, so a squash merge cannot be confirmed. Not deleted`);
+    : `branch ${branch} is not merged according to git, and gh did not answer, so a merged PR cannot be confirmed. Not deleted`);
   return { results, ok: false, main };
 }

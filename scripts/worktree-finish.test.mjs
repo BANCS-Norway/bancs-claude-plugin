@@ -76,11 +76,12 @@ test('remove: a branch git sees as merged goes with -d, and the worktree first',
   assert.equal(git(dir, 'branch', '--list', BRANCH), '');
 });
 
-test('remove: a squash-merged branch is deleted with -D only when the merged PR ends at its tip', () => {
+test('remove: a branch git does not see as merged is deleted with -D only when the merged PR ends at its tip', () => {
   const dir = withWorktree();
   const r = finish('remove', { cwd: dir, env: { FAKE_GH_PRS: merged(dir) } });
   assert.equal(r.code, 0, r.out + r.err);
-  assert.match(r.out, /^ok: branch feat\/7_demo deleted \(PR #9 was squash-merged/m);
+  assert.match(r.out, /^ok: branch feat\/7_demo deleted \(PR #9 is merged on GitHub; git does not see the branch as merged\)$/m);
+  assert.doesNotMatch(r.out, /squash|rebase/i, 'the message names no merge type');
   assert.equal(git(dir, 'branch', '--list', BRANCH), '');
 });
 
@@ -105,7 +106,7 @@ test('remove: an open PR, no PR, or gh not answering never deletes an unmerged b
     assert.notEqual(git(dir, 'branch', '--list', BRANCH), '');
   }
   const dir = withWorktree();
-  assert.match(finish('remove', { cwd: dir, env: { FAKE_GH_FAIL: '1' } }).out, /gh did not answer, so a squash merge cannot be confirmed/);
+  assert.match(finish('remove', { cwd: dir, env: { FAKE_GH_FAIL: '1' } }).out, /gh did not answer, so a merged PR cannot be confirmed/);
 });
 
 test('remove: a dirty worktree is left alone, branch included', () => {
