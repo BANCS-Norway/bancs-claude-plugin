@@ -1,3 +1,10 @@
+## [1.10.3](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.10.2...v1.10.3) (2026-11-11)
+
+
+### Bug Fixes
+
+* **worktree-create:** link .husky/_ so the git hooks run in worktrees ([025a971](https://github.com/BANCS-Norway/bancs-claude-plugin/commit/025a9712941057d80dc518a037d7141acdb9082b)), closes [#76](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/76)
+
 ## [1.10.2](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.10.1...v1.10.2) (2026-11-11)
 
 
