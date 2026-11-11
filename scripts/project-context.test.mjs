@@ -4,9 +4,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawn, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { delimiter, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CONTEXT_FILE, FACTS, checkoutRoots, confirm, ensure, memoryDir } from './lib/project-context.mjs';
 
@@ -44,7 +44,8 @@ const factOf = (name, dir) => FACTS[name].detect(FACTS[name].inputs(dir), dir);
 function run(args, { cwd, home } = {}) {
   const r = spawnSync(process.execPath, [cli], {
     cwd, input: args, encoding: 'utf8',
-    env: { ...GIT_ENV, HOME: home, USERPROFILE: home },
+    // PATH and the fake gh settings are read now, not when this file loaded: tests change them
+    env: { ...GIT_ENV, PATH: process.env.PATH, FAKE_GH_LABELS: process.env.FAKE_GH_LABELS, FAKE_GH_FAIL: process.env.FAKE_GH_FAIL, HOME: home, USERPROFILE: home },
   });
   return { code: r.status, out: r.stdout, err: r.stderr };
 }
@@ -139,6 +140,105 @@ test('default_branch: origin/HEAD, else the remote is asked, else unknown and no
   assert.equal(answer.value, 'unknown');
   assert.equal(answer.transient, true);
   assert.equal(factOf('default_branch', repo()).value, 'unknown');
+});
+
+// ---- PR title format and the in-progress label ----------------------------------------------
+
+/** A fake `gh` on PATH: `label list` prints $FAKE_GH_LABELS, and fails when $FAKE_GH_FAIL is set. */
+function fakeGh() {
+  const dir = tmp();
+  const bin = join(dir, 'gh');
+  writeFileSync(bin, `#!${process.execPath}
+if (process.env.FAKE_GH_FAIL) process.exit(1);
+if (process.argv[2] === 'label') process.stdout.write(process.env.FAKE_GH_LABELS ?? '[]');
+`);
+  chmodSync(bin, 0o755);
+  return dir;
+}
+
+/** Run `fn` with the fake gh first on PATH and these labels (an array of names, or null for a failing gh). */
+function withLabels(names, fn) {
+  const saved = { PATH: process.env.PATH, FAKE_GH_LABELS: process.env.FAKE_GH_LABELS, FAKE_GH_FAIL: process.env.FAKE_GH_FAIL };
+  process.env.PATH = `${fakeGh()}${delimiter}${saved.PATH}`;
+  process.env.FAKE_GH_LABELS = JSON.stringify((names ?? []).map((name) => ({ name })));
+  if (names === null) process.env.FAKE_GH_FAIL = '1';
+  else delete process.env.FAKE_GH_FAIL;
+  try {
+    return fn();
+  } finally {
+    for (const [key, value] of Object.entries(saved)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
+}
+
+test('pr_title: conventional from a commitlint config, a package.json key or a semantic PR title check', () => {
+  const title = (files) => factOf('pr_title', repo(files));
+  assert.equal(title({ '.commitlintrc.json': '{}' }).value, 'conventional');
+  assert.equal(title({ 'commitlint.config.mjs': 'export default {}' }).value, 'conventional');
+  assert.equal(title({ 'package.json': pkg({ commitlint: { extends: ['x'] } }) }).value, 'conventional');
+  const viaAction = title({ '.github/workflows/title.yml': 'uses: amannn/action-semantic-pull-request@v5' });
+  assert.equal(viaAction.value, 'conventional');
+  assert.match(viaAction.from, /title\.yml/);
+});
+
+test('pr_title: unknown, not a guess, when nothing says how titles are checked', () => {
+  assert.equal(factOf('pr_title', repo({ 'README.md': 'x' })).value, 'unknown');
+  assert.equal(factOf('pr_title', repo({ '.github/workflows/ci.yml': 'on: push' })).value, 'unknown');
+});
+
+const GITHUB = { origin: 'git@github.com:o/n.git' };
+
+test('in_progress_label: the exact status label, or the single label that says in progress', () => {
+  const label = (names) => withLabels(names, () => factOf('in_progress_label', repo({}, GITHUB)));
+  assert.equal(label(['bug', 'status: in progress', 'wip in-progress']).value, 'status: in progress');
+  assert.equal(label(['bug', 'In Progress']).value, 'In Progress');
+  assert.equal(label(['bug', 'in-progress']).value, 'in-progress');
+});
+
+test('in_progress_label: several matches or none are asked again, and gh failing is unknown', () => {
+  const label = (names) => withLabels(names, () => factOf('in_progress_label', repo({}, GITHUB)));
+  const several = label(['in progress', 'work in-progress']);
+  assert.equal(several.value, 'unknown');
+  assert.equal(several.transient, true);
+  assert.match(several.from, /several labels match/);
+  const none = label(['bug', 'enhancement']);
+  assert.equal(none.value, 'none');
+  assert.equal(none.transient, true);
+  const down = label(null);
+  assert.equal(down.value, 'unknown');
+  assert.equal(down.transient, true);
+});
+
+test('in_progress_label: a repo that is not on github.com has none, settled without asking gh', () => {
+  const answer = withLabels(null, () => factOf('in_progress_label', repo({}, { origin: 'ssh://git@gitlab.com/g/p.git' })));
+  assert.equal(answer.value, 'none');
+  assert.equal(answer.transient, undefined);
+  assert.equal(withLabels(null, () => factOf('in_progress_label', repo())).value, 'none');
+});
+
+test('in_progress_label: a found label is stored, a missing one is not', () => {
+  const run2 = (labels, dir, home) => withLabels(labels, () => run('get in_progress_label', { cwd: dir, home }));
+  const home = tmp();
+  const dir = repo({}, GITHUB);
+  const missing = run2(['bug'], dir, home);
+  assert.match(missing.out, /^in_progress_label: none$/m);
+  assert.equal(existsSync(fileFor(dir, home)), false);
+  const found = run2(['bug', 'status: in progress'], dir, home);
+  assert.match(found.out, /^in_progress_label: status: in progress$/m);
+  assert.equal(stored(dir, home).in_progress_label.value, 'status: in progress');
+  // stored: gh failing now does not change the answer
+  assert.match(run2(null, dir, home).out, /^in_progress_label: status: in progress$/m);
+});
+
+test('confirm sets the label by hand, spaces and all, and reset forgets it', () => {
+  const home = tmp();
+  const dir = repo({}, GITHUB);
+  assert.match(withLabels([], () => run('confirm in_progress_label doing now', { cwd: dir, home })).out, /^in_progress_label: doing now$/m);
+  assert.match(withLabels([], () => run('get in_progress_label', { cwd: dir, home })).out, /^in_progress_label: doing now$/m);
+  assert.equal(withLabels([], () => run('reset in_progress_label', { cwd: dir, home })).code, 0);
+  assert.match(withLabels([], () => run('get in_progress_label', { cwd: dir, home })).out, /^in_progress_label: none$/m);
 });
 
 // ---- storing, confirming, fingerprints -------------------------------------------------------

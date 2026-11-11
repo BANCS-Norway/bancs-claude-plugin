@@ -11,7 +11,7 @@
 //   - Writes go through a temp file and `rename`, and merge with what is on disk at that moment.
 import { execFileSync } from 'node:child_process';
 import { createHash, randomBytes } from 'node:crypto';
-import { appendFileSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { git } from './repo.mjs';
@@ -52,6 +52,21 @@ function gitRemote(root, ms, ...args) {
       timeout: ms,
       env: { ...process.env, GIT_TERMINAL_PROMPT: '0' },
     }).trim();
+  } catch {
+    return undefined;
+  }
+}
+
+/** `gh --json` output parsed, or undefined (not installed, not signed in, offline, timed out). */
+function ghJson(root, ...args) {
+  try {
+    return JSON.parse(execFileSync('gh', args, {
+      cwd: root,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+      timeout: 10000,
+      env: { ...process.env, GH_PROMPT_DISABLED: '1' },
+    }));
   } catch {
     return undefined;
   }
@@ -158,6 +173,60 @@ function detectTest(i) {
   return { value: 'unknown', from: i.unreadable ? 'package.json cannot be read' : 'no package.json test script, Makefile test target, Cargo.toml or go.mod' };
 }
 
+const COMMITLINT = [
+  'commitlint.config.js', 'commitlint.config.cjs', 'commitlint.config.mjs', 'commitlint.config.ts',
+  '.commitlintrc', '.commitlintrc.json', '.commitlintrc.yaml', '.commitlintrc.yml',
+  '.commitlintrc.js', '.commitlintrc.cjs', '.commitlintrc.mjs', '.commitlintrc.ts',
+];
+
+function prTitleInputs(root) {
+  const { pkg } = readPackage(root);
+  let workflows = [];
+  try {
+    workflows = readdirSync(join(root, '.github', 'workflows')).filter((f) => /\.ya?ml$/.test(f)).sort();
+  } catch {
+    // no workflows
+  }
+  return {
+    commitlint: COMMITLINT.filter((f) => existsSync(join(root, f))),
+    pkgKey: Boolean(pkg && 'commitlint' in pkg),
+    titleCheck: workflows.filter((f) => /action-semantic-pull-request/.test(read(join(root, '.github', 'workflows'), f) ?? '')),
+  };
+}
+
+function detectPrTitle(i) {
+  const found = [
+    ...i.commitlint,
+    i.pkgKey && 'a "commitlint" key in package.json',
+    ...i.titleCheck.map((f) => `a semantic PR title check (.github/workflows/${f})`),
+  ].filter(Boolean);
+  return found.length
+    ? { value: 'conventional', from: found.join('; ') }
+    : { value: 'unknown', from: 'no commitlint config or semantic PR title check found' };
+}
+
+// The label a skill puts on an issue it starts and takes off when it is done. Asked of GitHub, so
+// every answer except a single clear match is transient: the label may be created, or gh may be
+// offline, and neither should be remembered as a fact.
+function detectInProgressLabel(i, root) {
+  const repo = detectRepo(i);
+  if (repo.value === 'unknown' || !repo.github) {
+    return { value: 'none', from: i.remote ? 'the origin remote is not on github.com' : 'no origin remote' };
+  }
+  const labels = ghJson(root, 'label', 'list', '--json', 'name', '--limit', '200');
+  if (!Array.isArray(labels)) {
+    return { value: 'unknown', from: 'gh did not answer (not installed, not signed in or offline); asked again next time', transient: true };
+  }
+  const names = labels.map((l) => l?.name).filter((n) => typeof n === 'string');
+  const exact = names.find((n) => /^status:\s*in[ -]?progress$/i.test(n));
+  const near = names.filter((n) => /in[ -]?progress/i.test(n));
+  if (exact || near.length === 1) return { value: exact ?? near[0], from: 'gh label list' };
+  if (near.length > 1) {
+    return { value: 'unknown', from: `several labels match: ${near.join(', ')}; choose one with /bcp:context confirm in_progress_label <name>`, transient: true };
+  }
+  return { value: 'none', from: 'no label with "in progress" in its name; asked again next time', transient: true };
+}
+
 const anyText = (text) => {
   if (!text) throw new Error('a value is needed');
   return text;
@@ -218,17 +287,27 @@ export const FACTS = {
       return text;
     },
   },
+  pr_title: {
+    inputs: prTitleInputs,
+    detect: detectPrTitle,
+    parse: anyText,
+  },
+  in_progress_label: {
+    inputs: (root) => ({ remote: git(root, 'remote', 'get-url', 'origin') ?? null }),
+    detect: detectInProgressLabel,
+    parse: anyText,
+  },
 };
 
 // ---- the file -----------------------------------------------------------------------------
 
-const POINTER = '- [Project context](project_context.md) — release, direnv, CI, default branch, test command and repo, detected once for every bcp gate; /bcp:context to confirm or correct';
+const POINTER = '- [Project context](project_context.md) — release, direnv, CI, default branch, test command, repo, PR title format and in-progress label, detected once for every bcp gate; /bcp:context to confirm or correct';
 
 function render(facts) {
   return [
     '---',
     'name: project_context',
-    'description: Project facts bcp detected once (release, direnv, CI, default branch, test command, repo); every gate reads them. Confirm or correct with /bcp:context.',
+    'description: Project facts bcp detected once (release, direnv, CI, default branch, test command, repo, PR title format, in-progress label); every gate reads them. Confirm or correct with /bcp:context.',
     'type: project',
     '---',
     '',

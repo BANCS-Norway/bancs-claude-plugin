@@ -27,6 +27,21 @@ Extract:
 
 If the work log doesn't exist, skip to *Check the worktree state* and reconstruct from git.
 
+## Find the default branch
+
+The commits and the diff below are measured against the project's default branch. Ask for it:
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/project-context.mjs" <<'ARGS'
+get default_branch
+ARGS
+```
+
+If it is `unknown`, say so and ask the user which branch to compare with; do not assume one.
+Otherwise `{base}` below is that branch if it exists locally
+(`git rev-parse --verify --quiet refs/heads/<name>`), else `origin/<name>`. This is the same ref
+`worktree-create` started the branch from.
+
 ## Check the worktree state
 
 Run these in parallel:
@@ -35,11 +50,11 @@ Run these in parallel:
 # What branch, any uncommitted changes?
 cd .worktrees/{path} && git status
 
-# What commits exist since main?
-cd .worktrees/{path} && git log --oneline main..HEAD
+# What commits exist since the default branch?
+cd .worktrees/{path} && git log --oneline {base}..HEAD
 
-# What files differ from main?
-cd .worktrees/{path} && git diff --stat main
+# What files differ from the default branch?
+cd .worktrees/{path} && git diff --stat {base}
 
 # Any stash?
 cd .worktrees/{path} && git stash list
@@ -92,7 +107,7 @@ Resuming #215 with 🔧 Tech.
 Last session: Identified two files to change — Footer.vue line 24 and contact.md line 40.
 
 Git state:
-  • 0 commits since main
+  • 0 commits since {base}
   • 2 uncommitted changes (Footer.vue, docs/contact.md)
 
 Issue: No new activity on GitHub.
@@ -111,6 +126,6 @@ was found — write back to the same file, don't split it across both locations:
 
 ```markdown
 ## Current State
-Resumed {today}. {X} uncommitted changes, {Y} commits ahead of main.
+Resumed {today}. {X} uncommitted changes, {Y} commits ahead of {base}.
 {Any notable observations from the git state}
 ```

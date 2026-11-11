@@ -25,15 +25,16 @@ The last column names the issue that carries the change, where one exists.
 | --- | --- | --- | --- | --- | --- |
 | WC1 | Load issue from `project_issues.md`, fall back to `gh issue view` | process | None | slim | Cache holds only `#`, `Updated`, `Title`, `PR?`. Labels and member are never there, so this always falls through to `gh`. |
 | WC2 | Assign a member from the active workforce | process | None | keep | |
-| WC3 | Map labels to branch type; `.github/` override | convention | None | move | #42 |
-| WC4 | Slug rules, `{type}/{NNN}_{slug}` naming | convention | None | move | #42 |
+| WC3 | Map labels to branch type; `.github/` override | convention | None | move | #42 left it: its done-when does not list branch naming. |
+| WC4 | Slug rules, `{type}/{NNN}_{slug}` naming | convention | None | move | #42 left it: its done-when does not list branch naming. |
 | WC5 | Confirm names with the user | process | None | keep | |
+| WC5b | Preflight: `gh` signed in, default branch exists, branch and path free, no open PR for the issue | shim | PARTIAL; see native-overlap.md, WC5b | keep | #42, the checks from #1. In code: `scripts/worktree-preflight.mjs`. |
 | WC6a | `git worktree add` | shim | PARTIAL; see native-overlap.md, WC6a | slim | #37 |
 | WC6b | Worktree location `.worktrees/` | convention | `.claude/worktrees/` is the native location | move | #37 decides `.worktrees/` vs native path |
-| WC7 | Branch from hard-coded `main` | convention | Default branch is available from git | move | #42 |
-| WC8 | `direnv allow` in the new worktree | convention | None | move | #42. Only applies where `.envrc` exists. |
+| WC7 | Branch from the default branch | convention | Default branch is available from git | keep | #42: the base comes from the preflight (`default_branch`), no longer `main`. |
+| WC8 | `direnv allow` in the new worktree | convention | None | keep | #42: reads the `direnv` fact; only runs where `.envrc` exists. |
 | WC9 | Symlink `node_modules` or `npm ci` | shim | PARTIAL; see native-overlap.md, WC9 | slim | #37. Node-only. |
-| WC10 | Add label `status: in progress` | convention | None | move | #42. Label name is repo-specific. |
+| WC10 | Add the in-progress label | convention | None | keep | #42: the name is the `in_progress_label` fact; when there is none it adds nothing and says so. |
 | WC11 | Create mission file | process | None | keep | Overlaps WC12 in content (objective, progress). Revisit with #40. |
 | WC12 | Create `memory/issues/{NNN}/log.md` | process | Claude Code project memory shares the same folder | move | #40 |
 | WC13 | Seed `CHECKLIST.md`, add worktree-local exclude | process | None | keep | |
@@ -48,6 +49,7 @@ The last column names the issue that carries the change, where one exists.
 | --- | --- | --- | --- | --- | --- |
 | WR1 | Load work log, fall back to legacy `issue-{NNN}.md` | process | None | move | #40. Legacy fallback must keep working. |
 | WR2 | `cd` into the worktree, then git status, log, diff, stash | process | None | keep | #23: was `git -C`, which can bypass permission rules; now `cd` and plain git. |
+| WR2a | Default branch for the commit list and the diff | convention | None | keep | #42: the `default_branch` fact, no longer `main`. |
 | WR3 | Check GitHub for comments, labels, state | process | None | keep | |
 | WR4 | Reconcile local `CHECKLIST.md` with issue body | process | None | keep | |
 | WR5 | Activate member (cache as fallback) | process | None | slim | Cache never holds the member; drop the fallback. |
@@ -67,7 +69,7 @@ The last column names the issue that carries the change, where one exists.
 | WX5b | Audit `CHECKLIST.md` for unresolved items, wait for confirmation | process | None | keep | |
 | WX6 | `git worktree remove` | shim | PARTIAL; see native-overlap.md, WX6 | slim | #38 |
 | WX7 | `git branch -d`, `-D` after PR check | shim | PARTIAL; see native-overlap.md, WX7 | slim | #38 |
-| WX8 | Remove label `status: in progress` | convention | None | move | #42 |
+| WX8 | Remove the in-progress label | convention | None | keep | #42: the `in_progress_label` fact, as WC10. |
 | WX9 | Verify the issue closed, leave it open if not | process | None | keep | |
 | WX10 | Complete mission and move to `done/` | process | None | keep | |
 | WX11 | Tick PR test-plan boxes | process | None | keep | |
@@ -111,8 +113,8 @@ The last column names the issue that carries the change, where one exists.
 | ID | Step | Owner | Native overlap | Action | Issue / note |
 | --- | --- | --- | --- | --- | --- |
 | PR1 | Load work log; read labels and description from the cache | process | None | slim | The cache holds neither. Read from `gh`. |
-| PR2 | Title `{type}({scope}): ...` and type precedence | convention | None | move | #42 |
-| PR3 | Body: `Closes #`, Summary, Test plan | convention | None | move | #42 |
+| PR2 | PR title format and type precedence | convention | None | keep | #42: the `pr_title` fact; `unknown` asks the user and does not guess a format. |
+| PR3 | Body: `Closes #`, Summary, Test plan | convention | None | move | #42 left it: its done-when does not list the body. |
 | PR4 | Hard-coded `Generated with Claude Code` footer | shim | YES; see native-overlap.md, PR4 | retire |  |
 | PR5 | Show proposal, wait for confirmation | process | None | keep | |
 | PR6 | `cd` into the worktree, `gh pr create` | shim | PARTIAL; see native-overlap.md, PR6 | slim | Only the `cd` guard is bcp-specific. |

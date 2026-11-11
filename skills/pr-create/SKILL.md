@@ -25,13 +25,23 @@ Also read the issue from cache for labels and full description. Carefull!
 
 ## Determine PR title
 
-The PR title follows the same conventional commit format as the commits:
+The format is the repo's, so ask for it:
 
-```
-{type}({scope}): {description}
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/project-context.mjs" <<'ARGS'
+get pr_title
+ARGS
 ```
 
-Use the primary commit type from the batches. If multiple types were used across batches, use the most significant one (`feat` > `fix` > `style` > `chore`/`docs`).
+- `pr_title: conventional`: the title follows the same conventional commit format as the commits
+  (see `commit-guide`: type, optional scope, imperative description). Use the primary commit type
+  from the batches. If multiple types were used across batches, use the most significant one
+  (`feat` > `fix` > `style` > `chore`/`docs`).
+- `pr_title: unknown`, or the script fails, or `${CLAUDE_PLUGIN_ROOT}` is unset: do not guess a
+  format. Say that no title format was detected (no commitlint config or title check) and ask the
+  user which format this repo uses. Use their answer, and offer `/bcp:context confirm pr_title
+  <format>` so it is asked only once.
+- Any other value is a format the user set: follow it.
 
 ## Build the PR body
 
@@ -51,13 +61,15 @@ Keep the summary tight — what changed and why, not a repeat of the commit mess
 
 ## Show and ask for approval
 
-Present the PR before creating it:
+Present the PR before creating it. The target is the project's default branch
+(`get default_branch` from the project context; if it is `unknown`, write `(default branch unknown)`
+and let `gh` pick the repo's default):
 
 ```
 Proposed PR:
 
   Title: chore(ci): add social-post backfill workflow and issue template
-  Branch: chore/213_social-post-template-backfill → main
+  Branch: chore/213_social-post-template-backfill → {default branch}
 
   Closes #213
 

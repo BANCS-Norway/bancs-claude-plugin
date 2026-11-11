@@ -20,7 +20,7 @@ Cache file: `{memory-path}/project_issues.md`
 ## Step 2 — Regenerate the cache (it is a render, not a database)
 
 `project_issues.md` is a **disposable render of GitHub state**, not a store. GitHub is the
-source of truth (issue open/closed, the `status: in progress` label, linked PRs). Every sync
+source of truth (issue open/closed, the repo's in-progress label, linked PRs). Every sync
 **regenerates the whole file from `gh`** — it is never hand-merged row-by-row.
 
 This is what makes concurrent clone sessions safe: there is no shared mutable cache to race
@@ -63,7 +63,9 @@ Also run `git worktree list` to see what worktrees currently exist.
 Build an opinionated shortlist of 3–5 issues. Prioritise by:
 
 1. **Issues with active work logs** — already in progress, worktree likely exists → surface as resume candidates
-2. **Issues labeled `status: in progress`** — started but no work log found → flag for investigation
+2. **Issues carrying the repo's in-progress label** — started but no work log found → flag for investigation.
+   Ask for the label's name with `node "${CLAUDE_PLUGIN_ROOT}/scripts/project-context.mjs" get in_progress_label` (heredoc, as the other
+   skills do); on `none` or `unknown` skip this criterion and say so once, do not guess a name.
 3. **High priority + low effort** — quick wins with clear value
 4. **Logical sequence** — does one issue unblock another? Note dependencies
 5. **Recent activity** — recently updated issues are more likely to be relevant now

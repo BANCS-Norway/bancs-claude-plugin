@@ -64,6 +64,29 @@ When multiple labels exist, prefer the most specific. If ambiguous, use `feat` f
 - Max 35 characters
 - Example: `feat: update org number to reflect VAT registration` → `vat-org-number-registration`
 
+## Check before creating
+
+Run the checks with the branch and path you just derived. Run this exactly as written:
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/worktree-preflight.mjs" <<'ARGS'
+{NNN} {type}/{NNN}_{slug} .worktrees/{type}-{NNN}-{slug}
+ARGS
+```
+
+It prints `base: <ref>`, then one `ok:`, `warn:` or `FAIL:` line per check (`gh` is signed in, the
+default branch exists, the branch name and the path are free, no open PR already covers the issue),
+then `preflight: passed` or `preflight: failed`.
+
+- Show every `warn:` and `FAIL:` line to the user as it is.
+- On `preflight: failed`, stop and create nothing. Each `FAIL:` line says what to do about it.
+- A `warn:` does not stop the run, but say it (a local default branch behind origin means the new
+  branch would start without those commits).
+- `<ref>` from the `base:` line is `{base}` below. Never write a branch name there yourself.
+
+If `${CLAUDE_PLUGIN_ROOT}` is unset (not run as an installed plugin), say the checks cannot run and
+ask whether to continue without them.
+
 ## Confirm names before creating
 
 Show the user what you're about to create:
@@ -71,6 +94,7 @@ Show the user what you're about to create:
 ```
 Branch:   fix/215_vat-org-number-registration
 Worktree: .worktrees/fix-215-vat-org-number-registration
+Base:     {base}
 Member:   {member.label}   (from the active workforce)
 
 Create? (or suggest different names)
@@ -81,26 +105,35 @@ Wait for confirmation.
 ## Create the worktree
 
 ```bash
-git worktree add .worktrees/{type}-{NNN}-{slug} -b {type}/{NNN}_{slug} main
+git worktree add .worktrees/{type}-{NNN}-{slug} -b {type}/{NNN}_{slug} {base}
 ```
 
-Example:
+Example (`{base}` was `trunk`):
 
 ```bash
-git worktree add .worktrees/fix-215-vat-org-number -b fix/215_vat-org-number main
+git worktree add .worktrees/fix-215-vat-org-number -b fix/215_vat-org-number trunk
 ```
 
 ## Trust direnv in the new worktree (if applicable)
 
-If the project uses direnv (root `.envrc` exists), run `direnv allow` inside the new worktree before any subsequent step that might shell out to `uv` / `npm` / other project-scoped commands. direnv's trust record is per-filesystem-path, so a fresh worktree is untrusted even though the parent `.envrc` was approved at the main checkout. Without this, env-var exports (e.g. `UV_PROJECT_ENVIRONMENT` pointing at a shared venv) are silently dropped and downstream tools fall back to per-worktree state.
+Ask the project context whether the project uses direnv (it is detected once per project;
+[docs/project-context.md](../../docs/project-context.md)):
 
 ```bash
-if [ -f .envrc ] && command -v direnv >/dev/null 2>&1; then
+node "${CLAUDE_PLUGIN_ROOT}/scripts/project-context.mjs" <<'ARGS'
+get direnv
+ARGS
+```
+
+On `direnv: true`, run `direnv allow` inside the new worktree before any subsequent step that might shell out to `uv` / `npm` / other project-scoped commands. direnv's trust record is per-filesystem-path, so a fresh worktree is untrusted even though the parent `.envrc` was approved at the main checkout. Without this, env-var exports (e.g. `UV_PROJECT_ENVIRONMENT` pointing at a shared venv) are silently dropped and downstream tools fall back to per-worktree state.
+
+```bash
+if command -v direnv >/dev/null 2>&1; then
   (cd .worktrees/{type}-{NNN}-{slug} && direnv allow)
 fi
 ```
 
-Skip silently if direnv is not installed or `.envrc` is absent.
+Skip silently on `direnv: false`, if direnv is not installed, or if the script fails.
 
 ## Bootstrap dependencies in the new worktree (if applicable)
 
@@ -108,7 +141,7 @@ A fresh worktree has no installed dependencies, so git hooks (husky / lint-stage
 project scripts won't run until they're available. For a **Node** project with a
 `package.json` and a lockfile, make `node_modules` available: symlink the main checkout's
 if it exists
-(instant, and correct when the branch's deps match `main` — the common case), otherwise
+(instant, and correct when the branch's deps match `{base}` — the common case), otherwise
 run a clean install. Then exclude it worktree-locally so it's never committed — the
 `node_modules/` `.gitignore` pattern does **not** match a symlink.
 
@@ -134,9 +167,18 @@ non-Node tooling as needed.
 
 ## Label the issue in-progress
 
+The label's name is the repo's, so ask for it:
+
 ```bash
-gh issue edit {NNN} --add-label "status: in progress"
+node "${CLAUDE_PLUGIN_ROOT}/scripts/project-context.mjs" <<'ARGS'
+get in_progress_label
+ARGS
 ```
+
+If `in_progress_label:` is a name, add it: `gh issue edit {NNN} --add-label "{label}"`. If it is
+`none` or `unknown`, add nothing and do not make a label up: tell the user what the `from:` line
+says (for example no label with "in progress" in its name, so create one and run
+`/bcp:context confirm in_progress_label <name>`), and carry on.
 
 ## Start the mission
 
