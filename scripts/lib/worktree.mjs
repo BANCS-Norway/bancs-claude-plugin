@@ -1,9 +1,11 @@
 // Starts a worktree for an issue (#44, the shim steps of worktree-create): the preflight, `git worktree
-// add` from the base it names, the dependency bootstrap and `direnv allow`. Code, not prose in a skill,
-// so a skipped step is a failed run. A failed preflight creates nothing.
-import { execFileSync } from 'node:child_process';
-import { appendFileSync, existsSync, readFileSync, symlinkSync } from 'node:fs';
-import { dirname, join, relative, resolve } from 'node:path';
+// add` from the base it names, what `.worktreeinclude` names, the dependency bootstrap and `direnv
+// allow`. Code, not prose in a skill, so a skipped step is a failed run. A failed preflight creates
+// nothing.
+import { execFileSync, spawnSync } from 'node:child_process';
+import { appendFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { git } from './repo.mjs';
 import { checkoutRoots, ensure } from './project-context.mjs';
 import { exists, gh, isListed, preflight } from './preflight.mjs';
@@ -14,6 +16,91 @@ function run(cwd, ms, cmd, ...args) {
     return { ok: true, out: execFileSync(cmd, args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: ms }) };
   } catch (err) {
     return { ok: false, missing: err.code === 'ENOENT', out: String(err.stderr || err.message).trim().split('\n').pop() };
+  }
+}
+
+/** Adds `name` to the repository's local exclude file, once: a symlink is not matched by a `dir/` ignore pattern. */
+function excludeLocally(wt, name) {
+  const exclude = resolve(wt, git(wt, 'rev-parse', '--git-path', 'info/exclude') ?? '');
+  const have = existsSync(exclude) ? readFileSync(exclude, 'utf8').split('\n') : [];
+  if (!have.includes(name)) appendFileSync(exclude, `${have.length && have.at(-1) !== '' ? '\n' : ''}${name}\n`);
+}
+
+/**
+ * `.worktreeinclude`: gitignore-style patterns for the gitignored files a new worktree needs (the file
+ * Claude Code reads for its own worktrees), then optionally a `## links` heading whose `# link: <path>`
+ * lines name what to symlink instead of copy. To Claude Code the link lines are comments.
+ */
+export function parseWorktreeInclude(text) {
+  const patterns = [];
+  const links = [];
+  let inLinks = false;
+  for (const raw of text.split('\n')) {
+    const line = raw.trim();
+    if (/^##\s*links\s*$/i.test(line)) {
+      inLinks = true;
+    } else if (inLinks) {
+      const m = /^#\s*link:\s*(.+)$/i.exec(line);
+      if (m) links.push(m[1].trim());
+    } else if (line && !line.startsWith('#')) {
+      patterns.push(line);
+    }
+  }
+  return { patterns, links };
+}
+
+/** The gitignored, untracked files of `main` that the patterns match, as repo-relative paths. */
+function matchedFiles(main, patterns) {
+  const dir = mkdtempSync(join(tmpdir(), 'bcp-include-'));
+  try {
+    const file = join(dir, 'patterns');
+    writeFileSync(file, `${patterns.join('\n')}\n`);
+    // with only --exclude-from, -o -i lists the untracked files those patterns match, ignored or not
+    const listed = run(main, 60000, 'git', 'ls-files', '-z', '-o', '-i', `--exclude-from=${file}`);
+    const paths = listed.ok ? listed.out.split('\0').filter(Boolean) : [];
+    if (!paths.length) return [];
+    // native copies only what .gitignore also ignores: a pattern must not pull in an untracked file git does not ignore
+    const ignored = spawnSync('git', ['check-ignore', '-z', '--stdin'], { cwd: main, input: paths.join('\0'), encoding: 'utf8' });
+    return (ignored.stdout ?? '').split('\0').filter(Boolean);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+/** True when `path` is relative and stays inside `root`. */
+const inside = (root, path) => !isAbsolute(path) && resolve(root, path).startsWith(`${root}${sep}`);
+
+/** Copies and links what `.worktreeinclude` names into the new worktree. A missing file is a warning. */
+function applyInclude(main, wt, add) {
+  const file = join(main, '.worktreeinclude');
+  if (!existsSync(file)) {
+    add('warn', 'no .worktreeinclude: gitignored files (.env, build output) are not copied; add one, or an empty one to silence this');
+    return;
+  }
+  const { patterns, links } = parseWorktreeInclude(readFileSync(file, 'utf8'));
+  if (patterns.length) {
+    let copied = 0;
+    for (const rel of matchedFiles(main, patterns)) {
+      const dest = join(wt, rel);
+      if (!inside(wt, rel)) continue;
+      mkdirSync(dirname(dest), { recursive: true });
+      cpSync(join(main, rel), dest, { verbatimSymlinks: true });
+      copied += 1;
+    }
+    add('ok', `.worktreeinclude: copied ${copied} file${copied === 1 ? '' : 's'}`);
+  }
+  for (const rel of links) {
+    const source = join(main, rel);
+    const dest = join(wt, rel);
+    if (!inside(main, rel)) add('warn', `.worktreeinclude: link ${rel} is not a path inside the repository; skipped`);
+    else if (!existsSync(source)) add('warn', `.worktreeinclude: link ${rel} does not exist in the main checkout; skipped`);
+    else if (existsSync(dest) || lstatSync(dest, { throwIfNoEntry: false })) add('warn', `.worktreeinclude: ${rel} already exists in the worktree; not linked`);
+    else {
+      mkdirSync(dirname(dest), { recursive: true });
+      symlinkSync(relative(dirname(dest), source), dest);
+      excludeLocally(wt, rel);
+      add('ok', `.worktreeinclude: linked ${rel} from the main checkout`);
+    }
   }
 }
 
@@ -31,10 +118,7 @@ function bootstrapNode(main, wt, add) {
       add(install.ok ? 'ok' : 'warn', install.ok ? 'npm ci done' : `npm ci failed (${install.out}); run it in the worktree`);
     }
   }
-  // a symlink is not matched by the `node_modules/` .gitignore pattern, so exclude it by name
-  const exclude = resolve(wt, git(wt, 'rev-parse', '--git-path', 'info/exclude') ?? '');
-  const have = existsSync(exclude) ? readFileSync(exclude, 'utf8').split('\n') : [];
-  if (!have.includes('node_modules')) appendFileSync(exclude, `${have.length && have.at(-1) !== '' ? '\n' : ''}node_modules\n`);
+  excludeLocally(wt, 'node_modules');
 }
 
 /**
@@ -56,6 +140,7 @@ export function startWorktree({ cwd, issue, branch, path }) {
   }
   add('ok', `worktree ${path} created on ${branch} from ${found.base}`);
 
+  applyInclude(main, wt, add);
   bootstrapNode(main, wt, add);
 
   if (ensure(cwd, ['direnv']).entries.direnv.value === true) {

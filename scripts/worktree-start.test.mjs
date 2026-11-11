@@ -7,6 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, lstatSync, mkdirSync, readFileSync, readlinkSync, writeFileSync } from 'node:fs';
 import { delimiter, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseWorktreeInclude } from './lib/worktree.mjs';
 import { GIT_ENV, PATH_WITH_GH, fakeCommand, git, pathWithGitAndGhOnly, repoWithOrigin, tmp } from './lib/test-repo.mjs';
 
 const script = resolve(dirname(fileURLToPath(import.meta.url)), 'worktree-start.mjs');
@@ -119,4 +120,75 @@ test('bad arguments are refused before anything runs', () => {
     assert.match(r.err, /expected <issue-number> <branch> <worktree-path>/);
   }
   assert.equal(existsSync(join(dir, PATH_ARG)), false);
+});
+
+// ---- .worktreeinclude (#37) ----------------------------------------------------------------------
+
+/** A repo whose .gitignore hides .env, build/, other/ and shared/; the hidden files exist on disk, uncommitted. */
+function repoWithIgnored(include, extra = {}) {
+  const { dir } = repoWithOrigin({ '.gitignore': '.env\nbuild/\nother/\nshared/\n.worktrees/\n', ...(include === undefined ? {} : { '.worktreeinclude': include }), ...extra });
+  writeFileSync(join(dir, '.env'), 'SECRET=1');
+  for (const d of ['build', 'other', 'shared']) mkdirSync(join(dir, d));
+  writeFileSync(join(dir, 'build', 'out.txt'), 'out');
+  writeFileSync(join(dir, 'other', 'x.txt'), 'x');
+  writeFileSync(join(dir, 'shared', 'data.txt'), 'data');
+  return dir;
+}
+
+test('parseWorktreeInclude: patterns before `## links`, `# link:` lines after it, comments ignored', () => {
+  assert.deepEqual(parseWorktreeInclude('.env\n# a comment\nbuild/\n\n## Links\n# link: shared\n#link:  a/b\nstray line\n'), { patterns: ['.env', 'build/'], links: ['shared', 'a/b'] });
+  assert.deepEqual(parseWorktreeInclude(''), { patterns: [], links: [] });
+  assert.deepEqual(parseWorktreeInclude('# link: not under the heading\n'), { patterns: [], links: [] });
+});
+
+test('.worktreeinclude: the gitignored files its patterns match are copied, and only those', () => {
+  const dir = repoWithIgnored('.env\nbuild/\n');
+  const r = start({ cwd: dir });
+  assert.equal(r.code, 0, r.out + r.err);
+  assert.match(r.out, /^ok: \.worktreeinclude: copied 2 files$/m);
+  const wt = join(dir, PATH_ARG);
+  assert.equal(readFileSync(join(wt, '.env'), 'utf8'), 'SECRET=1');
+  assert.equal(readFileSync(join(wt, 'build', 'out.txt'), 'utf8'), 'out');
+  assert.equal(existsSync(join(wt, 'other')), false, 'not in the file, so not copied');
+  assert.doesNotMatch(r.out, /^warn: no \.worktreeinclude/m);
+});
+
+test('.worktreeinclude: a pattern does not pull in an untracked file that is not gitignored', () => {
+  const dir = repoWithIgnored('.env\nnotes.txt\n');
+  writeFileSync(join(dir, 'notes.txt'), 'untracked, not ignored');
+  const r = start({ cwd: dir });
+  assert.equal(r.code, 0, r.out + r.err);
+  assert.match(r.out, /^ok: \.worktreeinclude: copied 1 file$/m);
+  assert.equal(existsSync(join(dir, PATH_ARG, 'notes.txt')), false);
+});
+
+test('.worktreeinclude: `# link:` entries become symlinks to the main checkout, not copies, and stay out of git status', () => {
+  const dir = repoWithIgnored('.env\n\n## links\n# link: shared\n');
+  const r = start({ cwd: dir });
+  assert.equal(r.code, 0, r.out + r.err);
+  assert.match(r.out, /^ok: \.worktreeinclude: linked shared from the main checkout$/m);
+  const link = join(dir, PATH_ARG, 'shared');
+  assert.ok(lstatSync(link).isSymbolicLink());
+  assert.equal(resolve(dirname(link), readlinkSync(link)), join(dir, 'shared'));
+  assert.equal(git(join(dir, PATH_ARG), 'status', '--porcelain'), '');
+});
+
+test('.worktreeinclude: a link that is missing, escapes the repository or already exists is a warning, never a failure', () => {
+  const dir = repoWithIgnored('## links\n# link: nope\n# link: ../outside\n# link: /etc\n# link: .gitignore\n');
+  const r = start({ cwd: dir });
+  assert.equal(r.code, 0, r.out + r.err);
+  assert.match(r.out, /^warn: \.worktreeinclude: link nope does not exist in the main checkout; skipped$/m);
+  assert.match(r.out, /^warn: \.worktreeinclude: link \.\.\/outside is not a path inside the repository; skipped$/m);
+  assert.match(r.out, /^warn: \.worktreeinclude: link \/etc is not a path inside the repository; skipped$/m);
+  assert.match(r.out, /^warn: \.worktreeinclude: \.gitignore already exists in the worktree; not linked$/m);
+  assert.match(r.out, /^start: done$/m);
+});
+
+test('.worktreeinclude: a missing file is flagged; an empty one is a decision and says nothing', () => {
+  const missing = start({ cwd: repoWithIgnored(undefined) });
+  assert.equal(missing.code, 0, missing.out + missing.err);
+  assert.match(missing.out, /^warn: no \.worktreeinclude: gitignored files .* add one, or an empty one to silence this$/m);
+  const empty = start({ cwd: repoWithIgnored('') });
+  assert.equal(empty.code, 0, empty.out + empty.err);
+  assert.doesNotMatch(empty.out, /worktreeinclude/);
 });

@@ -1,0 +1,2 @@
+# bcp needs no gitignored files in a new worktree: worktree-start links node_modules itself.
+# Format: docs/worktreeinclude.md
