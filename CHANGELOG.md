@@ -1,3 +1,10 @@
+# [1.12.0](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.11.0...v1.12.0) (2026-11-11)
+
+
+### Features
+
+* **hooks:** point a new session at the issues skill on start ([b48b510](https://github.com/BANCS-Norway/bancs-claude-plugin/commit/b48b5101dfe8c37c3425d78fccfc6ecbb093b745)), closes [#47](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/47)
+
 # [1.11.0](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.10.3...v1.11.0) (2026-11-11)
 
 
