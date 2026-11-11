@@ -36,7 +36,7 @@ The last column names the issue that carries the change, where one exists.
 | WC9 | Symlink `node_modules` or `npm ci` | shim | PARTIAL; see native-overlap.md, WC9 | slim | #37. Node-only. #44: in code, `scripts/worktree-start.mjs`. |
 | WC10 | Add the in-progress label | convention | None | keep | #42: the name is the `in_progress_label` fact; when there is none it adds nothing and says so. |
 | WC11 | Create mission file | process | None | keep | Overlaps WC12 in content (objective, progress). Revisit with #40. |
-| WC12 | Create `memory/issues/{NNN}/log.md` | process | Claude Code project memory shares the same folder | move | #40 |
+| WC12 | Create `memory/issues/{NNN}/log.md` | process | Claude Code project memory shares the same folder | keep | #40 decided: stay in the project memory folder ([work-log-location.md](work-log-location.md)). #69 computes the folder from the main checkout. |
 | WC13 | Seed `CHECKLIST.md`, add worktree-local exclude | process | None | keep | |
 | WC14 | Wrap issue-body checklist in markers (`checklist-sync.mjs`) | process | None | keep | |
 | WC15 | Activate member style | process | None | keep | |
@@ -47,7 +47,7 @@ The last column names the issue that carries the change, where one exists.
 
 | ID | Step | Owner | Native overlap | Action | Issue / note |
 | --- | --- | --- | --- | --- | --- |
-| WR1 | Load work log, fall back to legacy `issue-{NNN}.md` | process | None | move | #40. Legacy fallback must keep working. |
+| WR1 | Load work log, fall back to legacy `issue-{NNN}.md` | process | None | keep | #40 decided: stay in the project memory folder ([work-log-location.md](work-log-location.md)). The legacy fallback stays. |
 | WR2 | `cd` into the worktree, then git status, log, diff, stash | process | None | keep | #23: was `git -C`, which can bypass permission rules; now `cd` and plain git. |
 | WR2a | Default branch for the commit list and the diff | convention | None | keep | #42: the `default_branch` fact, no longer `main`. |
 | WR3 | Check GitHub for comments, labels, state | process | None | keep | |
@@ -62,7 +62,7 @@ The last column names the issue that carries the change, where one exists.
 | ID | Step | Owner | Native overlap | Action | Issue / note |
 | --- | --- | --- | --- | --- | --- |
 | WX1 | Identify the merged PR (`gh pr list --state merged`) | process | None | keep | |
-| WX2 | Load work log, legacy fallback | process | None | move | #40. Legacy fallback must keep working. |
+| WX2 | Load work log, legacy fallback | process | None | keep | #40: as WR1. |
 | WX3 | Verify issue and PR state on inconsistency | process | None | keep | |
 | WX4 | Detect resume mode (worktree/branch already gone) | process | None | keep | #44: read from `worktree-finish status`. |
 | WX5a | Warn about uncommitted changes before removal | shim | PARTIAL; see native-overlap.md, WX5a | slim | #38. #44: the `dirty:` line of `worktree-finish status`. |
@@ -73,7 +73,7 @@ The last column names the issue that carries the change, where one exists.
 | WX9 | Verify the issue closed, leave it open if not | process | None | keep | |
 | WX10 | Complete mission and move to `done/` | process | None | keep | |
 | WX11 | Tick PR test-plan boxes | process | None | keep | |
-| WX12 | Remove `memory/issues/{NNN}/` (and legacy file) | process | None | move | #40 |
+| WX12 | Remove `memory/issues/{NNN}/` (and legacy file) | process | None | keep | #40: as WR1. |
 | WX13 | "Issue cache — nothing to do" section | process | None | retire | A step that says do nothing. Keep one line in the design note. |
 | WX14 | Confirm summary | process | None | keep | |
 | WX15 | Trigger: phrases ("merged", "cleanup") | process | None | enforce | #43 tags it; a merged-PR check could replace the phrase. |
@@ -99,9 +99,9 @@ The last column names the issue that carries the change, where one exists.
 
 | ID | Step | Owner | Native overlap | Action | Issue / note |
 | --- | --- | --- | --- | --- | --- |
-| IS1 | Derive project slug and memory path | process | Mirrors Claude Code's own project-folder scheme | keep | #40 decides whether the folder stays shared. |
+| IS1 | Derive project slug and memory path | process | Mirrors Claude Code's own project-folder scheme | keep | #40: the folder stays shared. Derived from the cwd, which differs in a worktree: #69 fixes it. |
 | IS2 | Regenerate `project_issues.md` from `gh` (two calls, atomic write) | process | None | keep | |
-| IS3 | Scan `memory/issues/*/log.md`, run `git worktree list` | process | None | move | #40 |
+| IS3 | Scan `memory/issues/*/log.md`, run `git worktree list` | process | None | keep | #40: as WR1. |
 | IS4 | Assess and prioritise a 3–5 item shortlist | process | None | keep | Judgment; stays prose. |
 | IS5 | Present shortlist, wait for the pick | process | None | keep | |
 | IS6 | New issue: regenerate the render, leave `Last synced` | process | None | keep | |
@@ -148,7 +148,7 @@ The last column names the issue that carries the change, where one exists.
 | SC5 | Fetch open issues | process | None | keep | |
 | SC6 | Assess and categorise issues | process | None | keep | |
 | SC7 | Locate memory directory, merge existing `MEMORY.md` | process | None | keep | |
-| SC8 | Write `project_open_prs.md`, `project_issues.md`, `MEMORY.md` | process | None | move | Writes `project_issues.md` as a hand-kept store in a different format from `issues`, which rebuilds it wholesale. Also writes the shared `MEMORY.md` the issue skills avoid. #40 |
+| SC8 | Write `project_open_prs.md`, `project_issues.md`, `MEMORY.md` | process | None | move | Writes `project_issues.md` as a hand-kept store in a different format from `issues`, which rebuilds it wholesale. Also writes the shared `MEMORY.md` the issue skills avoid. #40 decided the work-log location only; this stays open. |
 | SC9 | Hard-coded conventions in the `MEMORY.md` template (`npm install --legacy-peer-deps`, "write failing test first", `master`) | convention | None | move | #42 |
 | SC10 | Report summary | process | None | keep | |
 
