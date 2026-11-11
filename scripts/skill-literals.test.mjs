@@ -1,6 +1,7 @@
 // #42's "done when", as a test: no global skill hard-codes the base branch, the in-progress label or
-// the PR title format. They come from the project context (docs/project-context.md), so a skill that
-// writes one back in is wrong in every repo that does it differently. Run: npm run test:literals
+// the PR title format, and (#44) none writes an attribution footer. The first three come from the project context
+// (docs/project-context.md), so a skill that writes one back in is wrong in every repo that does it
+// differently. Run: npm run test:literals
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -19,6 +20,8 @@ const EXEMPT = {
 const RULES = [
   { name: 'branch', pattern: /\bmain\b(?!-repo|\s+(?:checkout|repo|repository|worktree))/, hint: 'use {base}, from `get default_branch` or the preflight' },
   { name: 'label', pattern: /status: in progress/, hint: 'use `get in_progress_label`' },
+  // The harness adds the attribution from the `attribution` setting (#44); a footer in a skill is a second one.
+  { name: 'footer', pattern: /^(?:🤖 )?Generated with|^Co-Authored-By:/, hint: 'write no attribution footer; Claude Code adds it' },
   // pr-create only: commit-guide's message format is the commit's, not the PR's (#41).
   { name: 'pr-title', pattern: /\{type\}\(\{scope\}\)/, only: ['pr-create'], hint: 'use `get pr_title`' },
 ];
@@ -52,6 +55,9 @@ test('the rule flags what it should and lets the primary clone be called main', 
   assert.deepEqual(flagged('worktree-cleanup', 'Back on main. What is next?'), ['branch']);
   assert.deepEqual(flagged('worktree-cleanup', 'gh issue edit 1 --remove-label "status: in progress"'), ['label']);
   assert.deepEqual(flagged('pr-create', '{type}({scope}): {description}'), ['pr-title']);
+  assert.deepEqual(flagged('commit-guide', 'Co-Authored-By: Claude <noreply@anthropic.com>'), ['footer']);
+  assert.deepEqual(flagged('pr-create', '🤖 Generated with [Claude Code](https://claude.com/claude-code)'), ['footer']);
+  assert.deepEqual(flagged('pr-create', 'Write no attribution line (`Generated with Claude Code`).'), []);
   for (const fine of ['symlink the main checkout\'s node_modules', 'cd {main-repo-path} && git x', 'the main repo root', 'Back in the main checkout.']) {
     assert.deepEqual(flagged('worktree-cleanup', fine), [], fine);
   }

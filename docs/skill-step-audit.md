@@ -82,14 +82,14 @@ The last column names the issue that carries the change, where one exists.
 
 | ID | Step | Owner | Native overlap | Action | Issue / note |
 | --- | --- | --- | --- | --- | --- |
-| CG1 | `git diff`, `git diff --staged`, `git status` | shim | PARTIAL; see native-overlap.md, CG1 | slim | No retirement condition, so outside the shim review (#36). |
-| CG2 | Commit types (`feat`, `fix`, `style`, ...) | convention | None | move | #41: the allowed types come from the project context `commit_types` fact (commitlint `type-enum`); `unknown` is asked about, never defaulted. The table keeps only what each type means. |
-| CG3 | Version impact, from the project context `release` fact | convention | None | move | #24 closes #22: the bump rules now follow the detected release mechanism (semantic-release, VitePress, none, unknown) instead of a VitePress table. #41 moved the commit types and scopes (CG2, CG4). |
-| CG4 | Optional scope | convention | None | move | #41: only a `scope-enum` from commitlint is enforced; otherwise the scope stays free. |
-| CG5 | Message body, `Part of #{NNN}` trailer | convention | None | move | #41 left it: the trailer links the commit to the issue bcp works on, it is not a repo rule; #44 decides where it lives. |
-| CG6 | Hard-coded `Generated with Claude Code` / `Co-Authored-By` footer | shim | YES; see native-overlap.md, CG6 | retire | Conflicts with the attribution the harness supplies. |
+| CG1 | `git diff`, `git diff --staged`, `git status` | process | PARTIAL; see native-overlap.md, CG1 | slim | #44: the process's own command, not a shim. No retirement condition, so outside the shim review (#36). |
+| CG2 | Commit types (`feat`, `fix`, `style`, ...) | convention | None | keep | #41: the allowed types come from the project context `commit_types` fact (commitlint `type-enum`); `unknown` is asked about, never defaulted. The table keeps only what each type means. |
+| CG3 | Version impact, from the project context `release` fact | convention | None | keep | #24 closes #22: the bump rules now follow the detected release mechanism (semantic-release, VitePress, none, unknown) instead of a VitePress table. #41 moved the commit types and scopes (CG2, CG4). |
+| CG4 | Optional scope | convention | None | keep | #41: only a `scope-enum` from commitlint is enforced; otherwise the scope stays free. |
+| CG5 | Message body, `Part of #{NNN}` trailer | process | None | keep | #44: the trailer links the commit to the issue bcp works on, it is not a repo rule. |
+| CG6 | Hard-coded `Generated with Claude Code` / `Co-Authored-By` footer | shim | YES; see native-overlap.md, CG6 | retire | #44 removed it; the skill says to write none. |
 | CG7 | Show proposal, wait for approval | process | None | keep | Human approves every commit. |
-| CG8 | `git add` and `git commit` | shim | PARTIAL; see native-overlap.md, CG8 | slim | No retirement condition, so outside the shim review (#36). |
+| CG8 | `git add` and `git commit` | process | PARTIAL; see native-overlap.md, CG8 | slim | #44: the process's own command, not a shim. No retirement condition, so outside the shim review (#36). |
 | CG9 | Append batch to the work log | process | None | enforce | #31 |
 | CG10 | Ask which checklist items resolved, sync to issue body | process | None | keep | |
 | CG11 | Comment on the issue for descoped items | process | None | enforce | #32 |
@@ -114,10 +114,10 @@ The last column names the issue that carries the change, where one exists.
 | --- | --- | --- | --- | --- | --- |
 | PR1 | Load work log; read labels and description from the cache | process | None | slim | The cache holds neither. Read from `gh`. |
 | PR2 | PR title format and type precedence | convention | None | keep | #42: the `pr_title` fact; `unknown` asks the user and does not guess a format. |
-| PR3 | Body: `Closes #`, Summary, Test plan | convention | None | move | #42 left it: its done-when does not list the body. |
-| PR4 | Hard-coded `Generated with Claude Code` footer | shim | YES; see native-overlap.md, PR4 | retire |  |
+| PR3 | Body: `Closes #`, Summary, Test plan | process | None | keep | #44: bcp's PR shape (the work log and the linked-issue rule depend on `Closes #`), not a repo rule. |
+| PR4 | Hard-coded `Generated with Claude Code` footer | shim | YES; see native-overlap.md, PR4 | retire | #44 removed it; the skill says to write none. |
 | PR5 | Show proposal, wait for confirmation | process | None | keep | |
-| PR6 | `cd` into the worktree, `gh pr create` | shim | PARTIAL; see native-overlap.md, PR6 | slim | Only the `cd` guard is bcp-specific. |
+| PR6 | `cd` into the worktree, `gh pr create` | process | PARTIAL; see native-overlap.md, PR6 | slim | #44: the process's own command; only the `cd` guard is bcp-specific. |
 | PR7 | "Issue cache — nothing to do" section | process | None | retire | Same as WX13. |
 | PR8 | Append `## PR` to the work log | process | None | enforce | #31 |
 | PR9 | Update mission file | process | None | keep | |
