@@ -42,6 +42,7 @@ This repository is a single-plugin marketplace named `bancs`:
 | `/bcp:missions-sync` | Sync mission timestamps from GitHub issue events |
 | `/bcp:workforce` | List / switch / update the active workforce (the agent persona roster) |
 | `/bcp:nudge` | Record a manual correction against a process step and repo, or report the nudges (three on a step in a repo = withered) |
+| `/bcp:context` | Show the project facts bcp detected once (release, direnv, CI directory, default branch, test command, repo), confirm one, correct one, or reset one |
 | `/bcp:shim-review` | In the bcp repo: review the shims not checked since the last Claude Code update against their `retire-when`, and mark each one checked |
 
 ### Hooks (`hooks/hooks.json`)
@@ -72,7 +73,7 @@ colliding issue numbers.
 .claude-plugin/
   plugin.json          # manifest (name: "bcp")
   marketplace.json     # single-plugin marketplace (name: "bancs")
-commands/              # /bcp:missions, /bcp:missions-sync, /bcp:workforce, /bcp:nudge
+commands/              # /bcp:missions, /bcp:missions-sync, /bcp:workforce, /bcp:nudge, /bcp:context, /bcp:shim-review
 skills/<name>/SKILL.md # the worktree + issue/PR workflow skills
 hooks/hooks.json       # SessionStart hook (seeds the active workforce)
 workforces/            # bundled workforces + index.json + schema
@@ -86,6 +87,7 @@ DISCLAIMER.md          # IP / trademark notice
 | Script | Purpose |
 | --- | --- |
 | `scripts/checklist-sync.mjs <issue> [path]` | Seed or sync a worktree's `CHECKLIST.md` into an issue body's `<!-- checklist:start/end -->` block (via `gh`). Used by `worktree-create`, `commit-guide`, `pr-create`. |
+| `scripts/project-context.mjs`, `scripts/lib/project-context.mjs` | Detect and read the per-project facts (release, direnv, CI directory, default branch, test command, repo) once, for every gate; see [docs/project-context.md](./docs/project-context.md). Used by `commit-guide` and `/bcp:context`. |
 | `scripts/session-start.mjs`, `scripts/lib/hook.mjs` | `SessionStart` hook — seeds the default workforce; shared hook payload helper |
 | `scripts/validate.mjs`, `scripts/set-version.mjs`, `scripts/hooks.test.mjs` | dev/CI only (manifest and hook validation; release version sync; hook tests) |
 
