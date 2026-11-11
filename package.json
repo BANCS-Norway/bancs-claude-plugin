@@ -17,7 +17,8 @@
     "test:context": "node --test scripts/project-context.test.mjs",
     "test:preflight": "node --test scripts/worktree-preflight.test.mjs",
     "test:literals": "node --test scripts/skill-literals.test.mjs",
-    "test": "node scripts/validate.mjs && npm run test:hooks && npm run test:skills && npm run test:stop && npm run test:nudge && npm run test:version && npm run test:shims && npm run test:context && npm run test:preflight && npm run test:literals",
+    "test:start": "node --test scripts/worktree-start.test.mjs",
+    "test": "node scripts/validate.mjs && npm run test:hooks && npm run test:skills && npm run test:stop && npm run test:nudge && npm run test:version && npm run test:shims && npm run test:context && npm run test:preflight && npm run test:literals && npm run test:start",
     "prepare": "husky"
   },
   "repository": {

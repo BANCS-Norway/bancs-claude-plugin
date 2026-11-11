@@ -84,8 +84,8 @@ then `preflight: passed` or `preflight: failed`.
   branch would start without those commits).
 - `<ref>` from the `base:` line is `{base}` below. Never write a branch name there yourself.
 
-If `${CLAUDE_PLUGIN_ROOT}` is unset (not run as an installed plugin), say the checks cannot run and
-ask whether to continue without them.
+If `${CLAUDE_PLUGIN_ROOT}` is unset (not run as an installed plugin), say that the checks and the
+worktree script cannot run, and stop: creating the worktree by hand skips them.
 
 ## Confirm names before creating
 
@@ -104,66 +104,27 @@ Wait for confirmation.
 
 ## Create the worktree
 
-```bash
-git worktree add .worktrees/{type}-{NNN}-{slug} -b {type}/{NNN}_{slug} {base}
-```
-
-Example (`{base}` was `trunk`):
-
-```bash
-git worktree add .worktrees/fix-215-vat-org-number -b fix/215_vat-org-number trunk
-```
-
-## Trust direnv in the new worktree (if applicable)
-
-Ask the project context whether the project uses direnv (it is detected once per project;
-[docs/project-context.md](../../docs/project-context.md)):
+One script does the git work. It runs the checks again, creates the worktree from the base they
+named, makes `node_modules` available (the main checkout's, linked, else a clean install) and runs
+`direnv allow` where the project uses direnv. Run this exactly as written, with the names you just
+confirmed:
 
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/scripts/project-context.mjs" <<'ARGS'
-get direnv
+node "${CLAUDE_PLUGIN_ROOT}/scripts/worktree-start.mjs" <<'ARGS'
+{NNN} {type}/{NNN}_{slug} .worktrees/{type}-{NNN}-{slug}
 ARGS
 ```
 
-On `direnv: true`, run `direnv allow` inside the new worktree before any subsequent step that might shell out to `uv` / `npm` / other project-scoped commands. direnv's trust record is per-filesystem-path, so a fresh worktree is untrusted even though the parent `.envrc` was approved at the main checkout. Without this, env-var exports (e.g. `UV_PROJECT_ENVIRONMENT` pointing at a shared venv) are silently dropped and downstream tools fall back to per-worktree state.
+It prints `base: <ref>`, one `ok:`, `warn:` or `FAIL:` line per check or step, then `start: done`
+or `start: failed`.
 
-```bash
-if command -v direnv >/dev/null 2>&1; then
-  (cd .worktrees/{type}-{NNN}-{slug} && direnv allow)
-fi
-```
+- Show every `warn:` and `FAIL:` line as it is. A `warn:` (for example a failed `npm ci`, or direnv
+  not installed) does not stop the run; say what it means for the user.
+- On `start: failed`, nothing was created. Stop and report; do not run `git worktree add` yourself.
+- Do not run `git worktree add`, `ln -s`, `npm ci` or `direnv allow` yourself: the script did.
 
-Skip silently on `direnv: false`, if direnv is not installed, or if the script fails.
-
-## Bootstrap dependencies in the new worktree (if applicable)
-
-A fresh worktree has no installed dependencies, so git hooks (husky / lint-staged) and
-project scripts won't run until they're available. For a **Node** project with a
-`package.json` and a lockfile, make `node_modules` available: symlink the main checkout's
-if it exists
-(instant, and correct when the branch's deps match `{base}` — the common case), otherwise
-run a clean install. Then exclude it worktree-locally so it's never committed — the
-`node_modules/` `.gitignore` pattern does **not** match a symlink.
-
-```bash
-WT=.worktrees/{type}-{NNN}-{slug}
-if [ -f "$WT/package.json" ] && [ -f "$WT/package-lock.json" ]; then
-  if [ ! -e "$WT/node_modules" ]; then
-    if [ -d node_modules ]; then
-      ln -s ../../node_modules "$WT/node_modules"   # share the main checkout's install
-    else
-      (cd "$WT" && npm ci)                          # nothing to borrow — clean install
-    fi
-  fi
-  # never commit node_modules from the worktree (a symlink isn't matched by `node_modules/`)
-  ( cd "$WT" && excl="$(git rev-parse --git-path info/exclude)" \
-    && { grep -qxF 'node_modules' "$excl" 2>/dev/null || echo 'node_modules' >> "$excl"; } )
-fi
-```
-
-Skip silently if there's no `package.json` + lockfile. Other ecosystems: the direnv step
-above covers shared-env setups (e.g. a uv venv); extend this step for yarn/pnpm or
-non-Node tooling as needed.
+Other ecosystems (yarn, pnpm, a uv venv) have no bootstrap step yet; tell the user if the project
+needs one.
 
 ## Label the issue in-progress
 

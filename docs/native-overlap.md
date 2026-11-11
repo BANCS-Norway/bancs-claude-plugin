@@ -18,6 +18,7 @@ Docs base: `https://code.claude.com/docs/en/`
 - **Native:** `claude --worktree <name>` and subagent `isolation: worktree`. [worktrees](https://code.claude.com/docs/en/worktrees.md#start-claude-in-a-worktree) (2.1.49, 2.1.50)
 - **Verdict:** PARTIAL. Native creates `.claude/worktrees/<name>/` on a branch named `worktree-<name>`. `worktree.baseRef` accepts only `"fresh"` (origin's default branch) or `"head"`; the docs say "You can't set `worktree.baseRef` to a branch name." [baseRef](https://code.claude.com/docs/en/worktrees.md#choose-the-base-branch)
 - **Gap it fills:** bcp's `{type}/{NNN}_{slug}` branch names and a chosen base branch cannot be expressed natively.
+- **In code (#44):** `scripts/worktree-start.mjs`. Retiring this row means removing that step from the script, or the script and the skill's call to it.
 - **retire-when:** native worktrees accept a caller-chosen branch name, or bcp adopts `worktree-<name>` naming and the `fresh` base.
 - **checked:** 2026-11
 
@@ -26,6 +27,7 @@ Docs base: `https://code.claude.com/docs/en/`
 - **Native:** `.worktreeinclude` copies gitignored files that match its patterns. [worktrees](https://code.claude.com/docs/en/worktrees.md#copy-gitignored-files-into-worktrees) The separate setting `worktree.symlinkDirectories` symlinks listed directories into each worktree. [settings](https://code.claude.com/docs/en/settings-reference.md#worktree-symlinkdirectories)
 - **Verdict:** PARTIAL. `.worktreeinclude` copies; it has no `# link:` or `## links` syntax. The brief's symlink-in-`.worktreeinclude` idea would be a bcp invention, not a native feature. `worktree.symlinkDirectories` is the native symlink route.
 - **CANNOT-CONFIRM:** whether either mechanism applies to a worktree made by plain `git worktree add`, which is how bcp creates them: neither the worktrees guide nor the settings page says. The introduction version of both is also unconfirmed.
+- **In code (#44):** the same script, `scripts/worktree-start.mjs`.
 - **retire-when:** bcp creates worktrees through the native path (see WC6a), or the docs confirm `worktree.symlinkDirectories` applies to worktrees made with git.
 - **checked:** 2026-11
 

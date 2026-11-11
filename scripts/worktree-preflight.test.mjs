@@ -3,65 +3,14 @@
 // HOME), and a fake `gh` on PATH so nothing touches the network.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync, spawnSync } from 'node:child_process';
-import { chmodSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { delimiter, dirname, join, resolve } from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { GIT_ENV, PATH_WITH_GH, git, pathWithoutGh, repoWithOrigin, tmp } from './lib/test-repo.mjs';
 
 const script = resolve(dirname(fileURLToPath(import.meta.url)), 'worktree-preflight.mjs');
 const contextCli = resolve(dirname(fileURLToPath(import.meta.url)), 'project-context.mjs');
-const tmp = () => mkdtempSync(join(tmpdir(), 'bcp-preflight-'));
-const GIT_ENV = {
-  ...process.env,
-  GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@t',
-  GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_NOSYSTEM: '1',
-};
-const git = (cwd, ...args) => execFileSync('git', args, { cwd, env: GIT_ENV, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
-
-/** A fake `gh`: `auth status` fails when FAKE_GH_AUTH=0, `pr list` prints FAKE_GH_PRS (fails when FAKE_GH_FAIL). */
-function fakeGhDir() {
-  const dir = tmp();
-  const bin = join(dir, 'gh');
-  writeFileSync(bin, `#!${process.execPath}
-const [a] = process.argv.slice(2);
-if (a === 'auth') process.exit(process.env.FAKE_GH_AUTH === '0' ? 1 : 0);
-if (a === 'pr') {
-  if (process.env.FAKE_GH_FAIL) process.exit(1);
-  process.stdout.write(process.env.FAKE_GH_PRS ?? '[]');
-}
-`);
-  chmodSync(bin, 0o755);
-  return dir;
-}
-const GH_DIR = fakeGhDir();
-const PATH_WITH_GH = `${GH_DIR}${delimiter}${process.env.PATH}`;
-/** PATH with git and node but no gh at all. */
-function pathWithoutGh() {
-  const dir = tmp();
-  symlinkSync(execFileSync('which', ['git'], { encoding: 'utf8' }).trim(), join(dir, 'git'));
-  return `${dir}${delimiter}${dirname(process.execPath)}`;
-}
-
-/**
- * A work repo on `main` whose origin is a local bare repo with `main` pushed and origin/HEAD set, so
- * the default branch is known offline. Returns { dir, bare }.
- */
-function repoWithOrigin() {
-  const bare = tmp();
-  git(bare, 'init', '-q', '--bare', '-b', 'main');
-  const dir = tmp();
-  git(dir, 'init', '-q', '-b', 'main');
-  writeFileSync(join(dir, 'a.txt'), 'a');
-  git(dir, 'add', '-A');
-  git(dir, 'commit', '-q', '-m', 'init');
-  git(dir, 'remote', 'add', 'origin', bare);
-  git(dir, 'push', '-q', 'origin', 'main');
-  git(dir, 'fetch', '-q', 'origin');
-  git(dir, 'symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/main');
-  return { dir, bare };
-}
-
 const BRANCH = 'feat/7_demo';
 const PATH_ARG = '.worktrees/feat-7-demo';
 
