@@ -1,3 +1,10 @@
+# [1.11.0](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.10.3...v1.11.0) (2026-11-11)
+
+
+### Features
+
+* **hooks:** block commits on the default branch and check staged files ([5036530](https://github.com/BANCS-Norway/bancs-claude-plugin/commit/50365305077621446180e1b3dea7a66676dc5dd5)), closes [#45](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/45)
+
 ## [1.10.3](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.10.2...v1.10.3) (2026-11-11)
 
 
