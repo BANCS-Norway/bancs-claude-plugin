@@ -24,8 +24,15 @@ Present the most recently merged PR and ask if that's the one.
 
 ## Load the issue work log
 
-Read `~/.claude/projects/{project-slug}/memory/issues/{NNN}/log.md` (fall back to the legacy
-flat `memory/issue-{NNN}.md` for worktrees created before the per-issue-folder change).
+Find the log, whichever layout it is in:
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/work-log.mjs" <<'ARGS'
+path {NNN}
+ARGS
+```
+
+Read the file named by `path: <file>`; `path: none` means there is no log.
 
 Extract branch name and worktree path for the cleanup commands.
 
@@ -192,14 +199,16 @@ EOF
 
 ## Remove the issue work log
 
-Remove the whole per-issue folder — it's single-writer, so this touches nothing shared:
+Remove the issue's work log. It removes the per-issue folder and the legacy flat file, and nothing
+else. The folder is single-writer, so this touches nothing shared:
 
 ```bash
-rm -rf ~/.claude/projects/{project-slug}/memory/issues/{NNN}
+node "${CLAUDE_PLUGIN_ROOT}/scripts/work-log.mjs" <<'ARGS'
+remove {NNN}
+ARGS
 ```
 
-Also remove the legacy flat file if it exists (pre-folder worktrees):
-`rm -f ~/.claude/projects/{project-slug}/memory/issue-{NNN}.md`
+Each `removed: <path>` line is something deleted; `removed: nothing` means there was no log.
 
 No `MEMORY.md` edit is needed — active work was never pointered there; the folder *was* the
 index, and removing it drops the issue from the next `issues` scan.

@@ -149,7 +149,15 @@ EOF
 
 ## Update the issue work log
 
-Append to `~/.claude/projects/{project-slug}/memory/issues/{NNN}/log.md`:
+Find the log file, then append to it:
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/work-log.mjs" <<'ARGS'
+path {NNN}
+ARGS
+```
+
+`path: <file>` is the file to append to. `path: none` means no log exists; say so and skip the append.
 
 Under `## Batches`, add:
 
