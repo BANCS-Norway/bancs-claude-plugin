@@ -1,3 +1,10 @@
+## [1.10.1](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.10.0...v1.10.1) (2026-11-11)
+
+
+### Bug Fixes
+
+* **worktree-finish:** say the PR is merged, not that it was squash-merged ([f58bba4](https://github.com/BANCS-Norway/bancs-claude-plugin/commit/f58bba4b3f9b60c483a524c39f68cd8168e2299e)), closes [#72](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/72)
+
 # [1.10.0](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.9.1...v1.10.0) (2026-11-11)
 
 
