@@ -106,7 +106,7 @@ The last column names the issue that carries the change, where one exists.
 | IS5 | Present shortlist, wait for the pick | process | None | keep | |
 | IS6 | New issue: regenerate the render, leave `Last synced` | process | None | keep | |
 | IS7 | Member roster (hard-coded Clone Force 99 list) | process | None | slim | Duplicates `workforces/clone-force-99.json`; the two can drift. |
-| IS8 | Trigger: "auto-trigger at session start" | process | NO; see native-overlap.md, IS8 | enforce | #47. Today it is prose only. |
+| IS8 | Trigger: "auto-trigger at session start" | process | NO; see native-overlap.md, IS8 | enforce | #47: `scripts/issues-start.mjs` (HK5) adds a SessionStart context line; the model still decides to run the skill. |
 
 ## `pr-create`
 

@@ -83,6 +83,15 @@ Docs base: `https://code.claude.com/docs/en/`
 - **Not covered by the hook:** only staged content is checked, so `git commit -a`, `git commit <path>` and `git -C <dir> commit` pass unchecked.
 - **checked:** 2026-11
 
+### HK5 — SessionStart points a new session at the `issues` skill (hook, #47)
+
+- **Native:** none. A hook cannot invoke a skill; a SessionStart hook can return `additionalContext`, and the docs warn that imperative text framed as system commands may trigger prompt-injection defenses, so the context reads as facts. [SessionStart](https://code.claude.com/docs/en/hooks.md#sessionstart-decision-control) The skill's own `description` is the only native trigger, and it depends on the model matching it. [skills](https://code.claude.com/docs/en/skills.md)
+- **Verdict:** NO equivalent (see IS8 below). The hook adds one sentence of context when the session is new (`startup` or `clear`), the repo's origin is on GitHub and the project has no work log; the model then decides to run `issues`.
+- **fills-gap:** a skill cannot be started by an event, only suggested to the model.
+- **retire-when:** a skill can declare a SessionStart trigger, or hooks can invoke a skill.
+- **CANNOT-CONFIRM:** the SessionStart `source` values beyond `startup`, `resume`, `clear` and `compact` (the hook treats any other value as not new); whether `additionalContext` reaches the model in a plugin's hook the same way as in settings (to be seen in a live session).
+- **checked:** 2026-11
+
 ## Other native-relevant rows
 
 Rows that touch a native feature but can never retire. CG1/CG8 and HK2 were shim rows until #36 moved them here: they have no retirement condition, so the monthly shim review would only ask about them again.
