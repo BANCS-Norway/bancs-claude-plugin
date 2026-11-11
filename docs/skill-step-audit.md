@@ -25,15 +25,15 @@ The last column names the issue that carries the change, where one exists.
 | --- | --- | --- | --- | --- | --- |
 | WC1 | Load issue from `project_issues.md`, fall back to `gh issue view` | process | None | slim | Cache holds only `#`, `Updated`, `Title`, `PR?`. Labels and member are never there, so this always falls through to `gh`. |
 | WC2 | Assign a member from the active workforce | process | None | keep | |
-| WC3 | Map labels to branch type; `.github/` override | convention | None | move | #42 left it: its done-when does not list branch naming. |
-| WC4 | Slug rules, `{type}/{NNN}_{slug}` naming | convention | None | move | #42 left it: its done-when does not list branch naming. |
+| WC3 | Map labels to branch type; `.github/` override | process | None | keep | #44: bcp's own workflow, not a repo rule. Resume, cleanup and the preflight depend on `{type}/{NNN}_{slug}`. The branch type should be one of the repo's `commit_types`. |
+| WC4 | Slug rules, `{type}/{NNN}_{slug}` naming | process | None | keep | #44: as WC3. |
 | WC5 | Confirm names with the user | process | None | keep | |
-| WC5b | Preflight: `gh` signed in, default branch exists, branch and path free, no open PR for the issue | shim | PARTIAL; see native-overlap.md, WC5b | keep | #42, the checks from #1. In code: `scripts/worktree-preflight.mjs`. |
-| WC6a | `git worktree add` | shim | PARTIAL; see native-overlap.md, WC6a | slim | #37 |
+| WC5b | Preflight: `gh` signed in, default branch exists, branch and path free, no open PR for the issue | shim | PARTIAL; see native-overlap.md, WC5b | keep | #42, the checks from #1. In code: `scripts/worktree-preflight.mjs`. #44: `worktree-start` runs it again, so creating cannot skip it. |
+| WC6a | `git worktree add` | shim | PARTIAL; see native-overlap.md, WC6a | slim | #37. #44: in code, `scripts/worktree-start.mjs`; the skill makes one call. |
 | WC6b | Worktree location `.worktrees/` | convention | `.claude/worktrees/` is the native location | move | #37 decides `.worktrees/` vs native path |
 | WC7 | Branch from the default branch | convention | Default branch is available from git | keep | #42: the base comes from the preflight (`default_branch`), no longer `main`. |
-| WC8 | `direnv allow` in the new worktree | convention | None | keep | #42: reads the `direnv` fact; only runs where `.envrc` exists. |
-| WC9 | Symlink `node_modules` or `npm ci` | shim | PARTIAL; see native-overlap.md, WC9 | slim | #37. Node-only. |
+| WC8 | `direnv allow` in the new worktree | convention | None | keep | #42: reads the `direnv` fact; only runs where `.envrc` exists. #44: runs in `scripts/worktree-start.mjs`. |
+| WC9 | Symlink `node_modules` or `npm ci` | shim | PARTIAL; see native-overlap.md, WC9 | slim | #37. Node-only. #44: in code, `scripts/worktree-start.mjs`. |
 | WC10 | Add the in-progress label | convention | None | keep | #42: the name is the `in_progress_label` fact; when there is none it adds nothing and says so. |
 | WC11 | Create mission file | process | None | keep | Overlaps WC12 in content (objective, progress). Revisit with #40. |
 | WC12 | Create `memory/issues/{NNN}/log.md` | process | Claude Code project memory shares the same folder | move | #40 |
