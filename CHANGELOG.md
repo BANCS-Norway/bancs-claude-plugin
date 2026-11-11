@@ -1,3 +1,10 @@
+# [1.10.0](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.9.1...v1.10.0) (2026-11-11)
+
+
+### Features
+
+* **worktree-create:** copy and link what .worktreeinclude names ([c501225](https://github.com/BANCS-Norway/bancs-claude-plugin/commit/c501225723da804d09a9db4ec0fd17b4419f3581)), closes [#37](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/37)
+
 ## [1.9.1](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.9.0...v1.9.1) (2026-11-11)
 
 
