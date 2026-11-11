@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.8.0...v1.9.0) (2026-11-11)
+
+
+### Features
+
+* **skills:** read base branch, PR title format, label and direnv from the repo ([369065e](https://github.com/BANCS-Norway/bancs-claude-plugin/commit/369065e5f05a6e2f03375fc83e0cd1681e1c52d8)), closes [#42](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/42)
+
 # [1.8.0](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.7.1...v1.8.0) (2026-11-11)
 
 
