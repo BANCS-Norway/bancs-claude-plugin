@@ -26,7 +26,27 @@ If nothing is staged, show unstaged changes and ask which files to include.
 
 Analyse what changed and apply these rules:
 
-### Commit types
+### Commit types — ask the project context
+
+Which types a repo allows is the repo's rule (commitlint), not the skill's. Ask for them; never
+assume a list:
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/project-context.mjs" <<'ARGS'
+get commit_types
+ARGS
+```
+
+The first line is `commit_types: <types>`, the allowed types separated by spaces.
+
+- A list: propose only a type from it, even when another type would fit the change better. Use the
+  meanings below to choose among them. A `scopes:` line lists the only scopes the repo allows.
+- `commit_types: unknown`, or the script fails, or `${CLAUDE_PLUGIN_ROOT}` is unset: do not propose a
+  type from memory. Say "Commit types not detected" and what the `from:` line says, and ask the user
+  which types this repo uses. Use their answer, and offer `/bcp:context confirm commit_types <list>`
+  so it is asked only once.
+
+What the types mean, for choosing among the allowed ones:
 
 | Type | When |
 |------|------|
@@ -38,6 +58,10 @@ Analyse what changed and apply these rules:
 | `refactor` | Code restructuring, no behaviour change |
 | `ci` | GitHub Actions, CI/CD changes |
 | `test` | Tests only |
+| `perf` | A change that makes something faster |
+
+A type outside this table is the repo's own: read its meaning from the repo (CONTRIBUTING, its
+commit history) or ask.
 
 When in doubt between `feat` and `fix`: `feat` adds something new, `fix` corrects something broken or wrong.
 
@@ -68,7 +92,8 @@ The answer is recorded once per project and every gate reads the same one. If it
 ## Determine scope (optional)
 
 If the change is clearly scoped to one area, add it: `feat(api):`, `fix(parser):`, `chore(ci):`.
-Skip scope if it's broad or unclear — don't force it.
+Skip scope if it's broad or unclear — don't force it. When `get commit_types` printed a `scopes:`
+line, the scope is one of those, or none.
 
 ## Draft the commit message
 

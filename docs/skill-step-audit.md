@@ -83,10 +83,10 @@ The last column names the issue that carries the change, where one exists.
 | ID | Step | Owner | Native overlap | Action | Issue / note |
 | --- | --- | --- | --- | --- | --- |
 | CG1 | `git diff`, `git diff --staged`, `git status` | shim | PARTIAL; see native-overlap.md, CG1 | slim | No retirement condition, so outside the shim review (#36). |
-| CG2 | Commit types (`feat`, `fix`, `style`, ...) | convention | None | move | #41 reads commitlint / release config |
-| CG3 | Version impact, from the project context `release` fact | convention | None | move | #24 closes #22: the bump rules now follow the detected release mechanism (semantic-release, VitePress, none, unknown) instead of a VitePress table. #41 still reads commit types and scopes from the repo. |
-| CG4 | Optional scope | convention | None | move | #41 |
-| CG5 | Message body, `Part of #{NNN}` trailer | convention | None | move | #41 |
+| CG2 | Commit types (`feat`, `fix`, `style`, ...) | convention | None | move | #41: the allowed types come from the project context `commit_types` fact (commitlint `type-enum`); `unknown` is asked about, never defaulted. The table keeps only what each type means. |
+| CG3 | Version impact, from the project context `release` fact | convention | None | move | #24 closes #22: the bump rules now follow the detected release mechanism (semantic-release, VitePress, none, unknown) instead of a VitePress table. #41 moved the commit types and scopes (CG2, CG4). |
+| CG4 | Optional scope | convention | None | move | #41: only a `scope-enum` from commitlint is enforced; otherwise the scope stays free. |
+| CG5 | Message body, `Part of #{NNN}` trailer | convention | None | move | #41 left it: the trailer links the commit to the issue bcp works on, it is not a repo rule; #44 decides where it lives. |
 | CG6 | Hard-coded `Generated with Claude Code` / `Co-Authored-By` footer | shim | YES; see native-overlap.md, CG6 | retire | Conflicts with the attribution the harness supplies. |
 | CG7 | Show proposal, wait for approval | process | None | keep | Human approves every commit. |
 | CG8 | `git add` and `git commit` | shim | PARTIAL; see native-overlap.md, CG8 | slim | No retirement condition, so outside the shim review (#36). |

@@ -33,6 +33,7 @@ function describe(key, e) {
     const bumps = Object.entries(e.bumps).map(([type, bump]) => `${type}: ${bump}`).join(', ');
     lines.push(`  bumps: ${bumps} (every other type: no bump)`);
   }
+  if (e.scopes) lines.push(`  scopes: ${e.scopes.join(' ')} (no other scope)`);
   if (e.note) lines.push(`  note: ${e.note}`);
   const state = e.confirmed ? `confirmed ${e.at}` : `unconfirmed, detected ${e.at}`;
   lines.push(`  from: ${e.from} (${state})`);
