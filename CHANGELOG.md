@@ -1,3 +1,10 @@
+## [1.9.1](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.9.0...v1.9.1) (2026-11-11)
+
+
+### Bug Fixes
+
+* **commit-guide:** read commit types and scopes from the repo ([c218e27](https://github.com/BANCS-Norway/bancs-claude-plugin/commit/c218e27672deee6fd5fbfce3bead4d2c50902668)), closes [#41](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/41)
+
 # [1.9.0](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.8.0...v1.9.0) (2026-11-11)
 
 
