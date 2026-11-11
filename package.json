@@ -14,7 +14,8 @@
     "test:nudge": "node --test scripts/nudge.test.mjs",
     "test:version": "node --test scripts/version-check.test.mjs",
     "test:shims": "node --test scripts/shims.test.mjs",
-    "test": "node scripts/validate.mjs && npm run test:hooks && npm run test:skills && npm run test:stop && npm run test:nudge && npm run test:version && npm run test:shims",
+    "test:context": "node --test scripts/project-context.test.mjs",
+    "test": "node scripts/validate.mjs && npm run test:hooks && npm run test:skills && npm run test:stop && npm run test:nudge && npm run test:version && npm run test:shims && npm run test:context",
     "prepare": "husky"
   },
   "repository": {

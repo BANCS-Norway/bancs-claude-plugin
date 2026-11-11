@@ -82,7 +82,7 @@ The last column names the issue that carries the change, where one exists.
 | --- | --- | --- | --- | --- | --- |
 | CG1 | `git diff`, `git diff --staged`, `git status` | shim | PARTIAL; see native-overlap.md, CG1 | slim | No retirement condition, so outside the shim review (#36). |
 | CG2 | Commit types (`feat`, `fix`, `style`, ...) | convention | None | move | #41 reads commitlint / release config |
-| CG3 | Version-bump table "VitePress site changes only" | convention | None | move | #41, closes #22. Describes another repo's site; bcp uses semantic-release. |
+| CG3 | Version impact, from the project context `release` fact | convention | None | move | #24 closes #22: the bump rules now follow the detected release mechanism (semantic-release, VitePress, none, unknown) instead of a VitePress table. #41 still reads commit types and scopes from the repo. |
 | CG4 | Optional scope | convention | None | move | #41 |
 | CG5 | Message body, `Part of #{NNN}` trailer | convention | None | move | #41 |
 | CG6 | Hard-coded `Generated with Claude Code` / `Co-Authored-By` footer | shim | YES; see native-overlap.md, CG6 | retire | Conflicts with the attribution the harness supplies. |

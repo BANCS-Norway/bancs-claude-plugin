@@ -26,34 +26,48 @@ If nothing is staged, show unstaged changes and ask which files to include.
 
 Analyse what changed and apply these rules:
 
-### Triggers a version bump (VitePress site changes only)
-
-| Type | When | Bump |
-|------|------|------|
-| `feat` | New page, component, or user-visible feature | Minor (1.0→1.1) |
-| `fix` | Bug fix to site functionality or appearance | Patch (1.0→1.0.1) |
-| `style` | CSS/visual changes to the site | Patch |
-
-### No version bump (internal changes)
+### Commit types
 
 | Type | When |
 |------|------|
+| `feat` | Something new for the user of the project |
+| `fix` | Corrects something broken or wrong |
+| `style` | Visual or formatting changes only |
 | `docs` | CLAUDE.md, README, workflow docs, code comments |
 | `chore` | Tooling, deps, configs, build scripts |
 | `refactor` | Code restructuring, no behaviour change |
 | `ci` | GitHub Actions, CI/CD changes |
 | `test` | Tests only |
 
-### Critical distinction
-
-- `style:` = CSS/visual → **version bump**
-- `refactor:` = code restructuring → **no bump**
-
 When in doubt between `feat` and `fix`: `feat` adds something new, `fix` corrects something broken or wrong.
+
+### Version impact — ask the project context
+
+Whether a commit bumps a version, and by how much, depends on the project's release mechanism,
+not on the type's name. Ask for it; never assume one:
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/project-context.mjs" <<'ARGS'
+get release
+ARGS
+```
+
+Read the first line, `release: <value>`, and say exactly one of these in the proposal:
+
+| `release` | In the proposal |
+|-----------|-----------------|
+| `semantic-release` | The `bumps:` line names the types that bump and by how much; every other type does not bump. Say what this commit's type does. |
+| `vitepress` | The `bumps:` line names the types that bump the site version; every other type does not. Say what this commit's type does, and that a bump deploys the site. |
+| `none` | Nothing about versions or deployment. |
+| `unknown`, or the script fails, or `${CLAUDE_PLUGIN_ROOT}` is unset | "Release mechanism not detected." No bump claim and no no-bump claim. |
+
+The answer is recorded once per project and every gate reads the same one. If its `from:` line says
+`unconfirmed`, say so once in the session and that `/bcp:context confirm release` pins it (or
+`/bcp:context confirm release <value>` corrects it). Do not raise it again on later commits.
 
 ## Determine scope (optional)
 
-If the change is clearly scoped to one area, add it: `feat(blog):`, `fix(footer):`, `chore(ci):`.
+If the change is clearly scoped to one area, add it: `feat(api):`, `fix(parser):`, `chore(ci):`.
 Skip scope if it's broad or unclear — don't force it.
 
 ## Draft the commit message
@@ -81,17 +95,20 @@ Present clearly:
 ```
 Proposed commit:
 
-  fix(footer): update org number to reflect VAT registration
+  fix(parser): handle an empty config file
 
-  - Add MVA suffix to org number in Footer.vue
-  - Update MVA-registrert status on contact.md
+  - Return the defaults when the config file has no content
+  - Add a test for the empty file
 
   Part of #215
 
-  ⚠️  This is a `fix:` — triggers a patch version bump and site deployment.
+  ⚠️  This is a `fix:` — a patch version bump under semantic-release.
 
 Stage and commit?
 ```
+
+The ⚠️ line comes from *Version impact* above: with `none` leave it out, and with `unknown` it reads
+"Release mechanism not detected."
 
 Wait for explicit approval. Do not commit until confirmed.
 
