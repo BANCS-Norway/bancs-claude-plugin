@@ -1,3 +1,10 @@
+# [1.13.0](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.12.0...v1.13.0) (2026-11-12)
+
+
+### Features
+
+* **worktree-start:** warn when core.hooksPath is missing in the new worktree ([9f2e457](https://github.com/BANCS-Norway/bancs-claude-plugin/commit/9f2e457b7938482d1e0c23bafcafb2667191c49c)), closes [#78](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/78)
+
 # [1.12.0](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.11.0...v1.12.0) (2026-11-11)
 
 
