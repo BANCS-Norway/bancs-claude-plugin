@@ -12,7 +12,13 @@ import { checkCommit, isCommitCommand } from './lib/commit-guard.mjs';
 
 const payload = readPayload();
 if (!shouldRun(payload, { event: 'PreToolUse', command: /\bgit\b[^\n]*\bcommit\b/ })) process.exit(0);
-if (!isCommitCommand(payload.tool_input.command)) process.exit(0);
+let isCommit = false;
+try {
+  isCommit = isCommitCommand(payload.tool_input.command);
+} catch {
+  // a command that cannot be read is not judged: never fail the session (docs/hook-conventions.md, rule 4)
+}
+if (!isCommit) process.exit(0);
 
 let result;
 try {

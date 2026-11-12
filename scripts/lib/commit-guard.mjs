@@ -4,16 +4,18 @@
 // commit and what only deserves a warning. Every message names the way out. Nothing here talks to
 // the network or writes anything, and a git call that fails reads as "nothing to report".
 import { execFileSync } from 'node:child_process';
+import { codeOf } from './shell-command.mjs';
 
 export const LARGE_FILE_BYTES = 1024 * 1024;
 
-// `git` as a command word (start of the command, or after ; & | ( ), then global options, then
-// `commit`. `git -C <dir> commit` is left out on purpose: the hook cannot tell which repo that is.
-const COMMIT = /(?:^|[;&|(]\s*)(?:\w+=\S+\s+)*git\s+(?:(?:-c\s+\S+|--[\w-]+(?:=\S+)?)\s+)*commit(?=\s|$)/;
+// `git` as a command word (start of the command, or after ; & | ( or a newline), then global options,
+// then `commit`. `git -C <dir> commit` is left out on purpose: the hook cannot tell which repo that is.
+const COMMIT = /(?:^|[;&|(\n]\s*)(?:\w+=\S+\s+)*git\s+(?:(?:-c\s+\S+|--[\w-]+(?:=\S+)?)\s+)*commit(?=\s|$)/;
 
-// Quoted text is dropped first: a commit message that says "-h" or "; git commit" is not a flag or a command.
+// Only what the shell runs counts (shell-command.mjs): a commit message that says "-h" or "; git commit",
+// or a PR body or heredoc that mentions a commit, is not a flag or a command (#88).
 export function isCommitCommand(command) {
-  const bare = command.replace(/"(?:[^"\\]|\\.)*"|'[^']*'/g, '""');
+  const bare = codeOf(command);
   return COMMIT.test(bare) && !/\s--help\b|\s-h\b/.test(bare);
 }
 

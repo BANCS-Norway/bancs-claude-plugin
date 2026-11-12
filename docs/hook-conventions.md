@@ -32,6 +32,13 @@ consistent with each other. `npm run validate` enforces the first rule.
 5. **Test it.** Add cases to `scripts/hooks.test.mjs` (`npm run test:hooks`, run in CI). Run the hook as Claude Code
    does: `node`, payload on stdin, `CLAUDE_PLUGIN_ROOT` and a temporary `HOME` in the environment.
 
+6. **Judge a command by what it runs, not by its text.** A hook that guards a Bash command must
+   not search the raw command line: a commit message, a PR body or a heredoc that mentions the
+   command would match. Run the command through `codeOf()` from `scripts/lib/shell-command.mjs`
+   (quoted text blanked, heredoc bodies dropped) and match on that. A hook's `if` filter is not a
+   substitute: it can run the hook for a command that does not match, so the script checks again
+   ([#88](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/88)).
+
 ## Shape of a hook
 
 ```js
