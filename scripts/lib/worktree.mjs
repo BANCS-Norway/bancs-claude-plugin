@@ -104,6 +104,18 @@ function applyInclude(main, wt, add) {
   }
 }
 
+/**
+ * Git runs no hooks, and says nothing, when `core.hooksPath` points at a folder that does not exist.
+ * A relative path is looked up from the worktree, so a generated, gitignored folder (husky's `.husky/_`)
+ * is missing in a new one unless `.worktreeinclude` links it (#78).
+ */
+function checkHooksPath(wt, add) {
+  const hooksPath = git(wt, 'config', '--get', 'core.hooksPath');
+  if (hooksPath && !existsSync(resolve(wt, hooksPath))) {
+    add('warn', `core.hooksPath ${hooksPath} is missing in the worktree; git hooks will not run (link it under ## links in .worktreeinclude)`);
+  }
+}
+
 /** Makes `node_modules` available in the worktree: the main checkout's, linked; else a clean install. */
 function bootstrapNode(main, wt, add) {
   if (!existsSync(join(wt, 'package.json')) || !existsSync(join(wt, 'package-lock.json'))) return;
@@ -142,6 +154,8 @@ export function startWorktree({ cwd, issue, branch, path }) {
 
   applyInclude(main, wt, add);
   bootstrapNode(main, wt, add);
+  // after the install: a husky `prepare` script can create the hooks folder, and the warning is about the finished worktree
+  checkHooksPath(wt, add);
 
   if (ensure(cwd, ['direnv']).entries.direnv.value === true) {
     // direnv's trust is per path: a new worktree is untrusted though the main checkout's .envrc was allowed

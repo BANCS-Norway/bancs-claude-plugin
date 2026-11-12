@@ -27,7 +27,10 @@ build/
   commitlint and the pre-commit hook never fire. Under `## links`: `# link: .husky/_`. A link, not a copy, so it follows
   the main checkout when husky regenerates the folder. The hook scripts find the worktree's own tracked `.husky/*`
   from their own path. Any tool that generates ignored hook files at install time needs the same line
-  ([#76](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/76)).
+  ([#76](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/76)). When `core.hooksPath` is set and its folder
+  is missing in the new worktree, `worktree-start` prints `warn: core.hooksPath <path> is missing in the worktree; git
+  hooks will not run`. That is the cue to add the link; the run still succeeds
+  ([#78](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/78)).
 - **No file:** `worktree-start` prints `warn: no .worktreeinclude` and `worktree-create` asks whether to write one. An
   **empty** file means nothing is needed and silences the warning.
 - **Not here:** the `node_modules` link or `npm ci` for a Node project is separate and stays; a project that wants another
