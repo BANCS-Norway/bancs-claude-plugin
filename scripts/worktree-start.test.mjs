@@ -204,7 +204,9 @@ const commit = (wt, message) => spawnSync('git', ['commit', '--allow-empty', '-q
 
 test('.worktreeinclude: linking .husky/_ makes the git hooks run in the new worktree; without it they are silent', () => {
   const without = repoWithHusky('## links\n');
-  assert.equal(start({ cwd: without }).code, 0);
+  const warned = start({ cwd: without });
+  assert.equal(warned.code, 0, 'a warning does not fail the run');
+  assert.match(warned.out, /^warn: core\.hooksPath \.husky\/_ is missing in the worktree; git hooks will not run \(link it under ## links in \.worktreeinclude\)$/m);
   assert.equal(existsSync(join(without, PATH_ARG, '.husky', '_')), false);
   assert.equal(commit(join(without, PATH_ARG), 'bad message').status, 0, 'no hooks path, so the bad message goes through');
 
@@ -212,6 +214,7 @@ test('.worktreeinclude: linking .husky/_ makes the git hooks run in the new work
   const r = start({ cwd: dir });
   assert.equal(r.code, 0, r.out + r.err);
   assert.match(r.out, /^ok: \.worktreeinclude: linked \.husky\/_ from the main checkout$/m);
+  assert.doesNotMatch(r.out, /core\.hooksPath/, 'the folder exists, so no warning');
   const wt = join(dir, PATH_ARG);
   assert.ok(lstatSync(join(wt, '.husky', '_')).isSymbolicLink());
   assert.equal(git(wt, 'status', '--porcelain'), '', 'the link is not offered for commit');
@@ -219,6 +222,12 @@ test('.worktreeinclude: linking .husky/_ makes the git hooks run in the new work
   assert.notEqual(bad.status, 0, 'the worktree runs the commit-msg hook');
   assert.match(bad.stdout + bad.stderr, /message must start with ok/);
   assert.equal(commit(wt, 'ok: fine').status, 0);
+});
+
+test('core.hooksPath: no warning when it is unset', () => {
+  const r = start({ cwd: repoWithIgnored('') });
+  assert.equal(r.code, 0, r.out + r.err);
+  assert.doesNotMatch(r.out, /core\.hooksPath/);
 });
 
 test('.worktreeinclude: a missing file is flagged; an empty one is a decision and says nothing', () => {
