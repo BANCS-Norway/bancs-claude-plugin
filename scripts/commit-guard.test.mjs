@@ -6,6 +6,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isCommitCommand } from './lib/commit-guard.mjs';
+import { codeOf } from './lib/shell-command.mjs';
 import { git, repoWithOrigin, tmp } from './lib/test-repo.mjs';
 
 const script = resolve(dirname(fileURLToPath(import.meta.url)), 'commit-guard.mjs');
@@ -47,6 +48,70 @@ test('isCommitCommand matches a git commit command and nothing else', () => {
   for (const c of ['git status', 'git commit --help', 'git log --grep "git commit"', 'echo git commit', 'git commit-tree HEAD^{tree}', 'gitk commit', 'npm run commit', 'echo "x; git commit -m y"']) {
     assert.equal(isCommitCommand(c), false, c);
   }
+});
+
+const lines = (...l) => l.join('\n');
+
+// #88: a heredoc body, a PR body or a comment that mentions a commit is text, not a command.
+test('isCommitCommand: text that only mentions a commit is not a commit', () => {
+  for (const c of [
+    lines("cat > note.md <<'EOF'", 'A hook\'s filter is not safe: `if: "Bash(git commit *)"` ran for a command that was neither.', 'EOF', 'gh issue comment 85 --body-file note.md'),
+    lines('cat > note.md <<EOF', 'see (git commit -m x) in the log', 'EOF'),
+    lines('gh pr edit 84 --body "$(cat <<\'EOF\'', "the hook's rule: (git commit) is checked", 'EOF', ')"'),
+    lines('cat <<-EOF', '\tgit commit -m x', '\tEOF', 'ls'),
+    lines('cat <<A <<B', 'git commit -m x', 'A', '; git commit -m y', 'B', 'ls'),
+    'cat <<< "git commit -m x"',
+    'gh issue comment 1 --body "run (git commit) later"',
+    'echo "a commit is next"',
+    'B=$(gh pr view 439 --json body --jq .body) && gh pr edit 439 --body "$B"',
+    'gh pr create --title "docs: git commit" --body-file b.md',
+    'echo "git commit',
+  ]) {
+    assert.equal(isCommitCommand(c), false, c);
+  }
+});
+
+test('isCommitCommand: a real commit is still seen after a heredoc, inside $(...), and with quotes in its message', () => {
+  for (const c of [
+    lines('git commit -m "$(cat <<\'EOF\'', 'fix: "x" and it\'s fine', 'EOF', ')"'),
+    'git add . && git commit -m x',
+    lines("cat > f <<'EOF'", 'body', 'EOF', 'git commit -m x'),
+    'echo "$(git commit -m x)"',
+    lines('git commit -m x <<EOF', 'ignored', 'EOF'),
+  ]) {
+    assert.equal(isCommitCommand(c), true, c);
+  }
+});
+
+test('codeOf keeps what the shell runs and never throws', () => {
+  assert.equal(codeOf(lines("cat > f <<'EOF'", 'secret text', 'EOF', 'ls')), lines('cat > f <<""', 'ls'));
+  assert.equal(codeOf(lines('cat <<-EOF', '\ttext', '\tEOF', 'ls')), lines('cat <<""', 'ls'));
+  assert.equal(codeOf(lines('cat <<A <<B', '1', 'A', '2', 'B', 'ls')), lines('cat <<"" <<""', 'ls'));
+  assert.equal(codeOf('cat <<< "text"'), 'cat <<< ""');
+  assert.equal(codeOf('echo "a" \'b\''), 'echo "" ""');
+  assert.equal(codeOf('echo "a \\" b"'), 'echo ""');
+  assert.equal(codeOf('echo "$(date)"'), 'echo "" ; date ; ');
+  assert.equal(codeOf('echo "unterminated'), 'echo ""');
+  assert.equal(codeOf("echo 'unterminated"), 'echo ""');
+  assert.equal(codeOf(lines('cat <<EOF', 'no end')), 'cat <<""\n');
+  assert.equal(codeOf(''), '');
+});
+
+test('a deeply nested command is read as text, not an error', () => {
+  const deep = 'git commit -m ' + '"$('.repeat(20000);
+  assert.doesNotThrow(() => codeOf(deep));
+  assert.doesNotThrow(() => isCommitCommand(deep));
+  const r = run(featureRepo({ 'b.txt': 'b' }), { command: deep });
+  assert.equal(r.status, 0, 'the hook does not fail the session');
+  assert.equal(r.raw.trim(), '');
+});
+
+test('the hook lets through a command that only mentions a commit, on the default branch', () => {
+  const { dir } = repoWithOrigin();
+  stage(dir, { 'b.txt': 'b' });
+  const mention = lines('gh issue comment 85 --body "$(cat <<\'EOF\'', 'the guard refuses a git commit on main', 'EOF', ')"');
+  assert.equal(run(dir, { command: mention }).raw.trim(), '');
+  assert.equal(denied(run(dir, { command: 'git add . && git commit -m x' })), true);
 });
 
 test('blocks a commit on the default branch and names the way out', () => {
