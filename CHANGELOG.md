@@ -1,3 +1,10 @@
+## [1.13.1](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.13.0...v1.13.1) (2026-11-12)
+
+
+### Bug Fixes
+
+* **hooks:** judge a command by what it runs, not by its text ([e59ef09](https://github.com/BANCS-Norway/bancs-claude-plugin/commit/e59ef094ba37c4096129e694716591278ab4e1e1)), closes [#88](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/88)
+
 # [1.13.0](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.12.0...v1.13.0) (2026-11-12)
 
 
