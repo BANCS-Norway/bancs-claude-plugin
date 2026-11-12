@@ -66,6 +66,31 @@ Repos: `forestboys` ([VirtueMe/forestboys](https://github.com/VirtueMe/forestboy
 | WX11 PR test plan ticked | all boxes checked | inconsistent (22/34 PRs) | inconsistent (25/40 PRs) |
 | WX12 work log removed | no work log left for a finished issue | holds (1 stale log) | holds (2 stale logs, in the older checkout) |
 
+## After the rework
+
+One real issue per repo, run through plugin 1.12.0 on 2026-11-12 ([#48](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/48)): `bancs-claude-plugin` #78 (run with the maintainer watching) and `forestboys` #438 (a separate session). This is one issue per repo, so it is not a rate and does not replace the baseline; read it as whether the steps held on a real run. Evidence for #78 is its transcript, GitHub and `~/.claude`; for #438, GitHub, `~/.claude` and the `Skill` calls in its transcript. A skill typed as a slash command is not a `Skill` call, so a "no" for `forestboys` means no call was found.
+
+| Step | forestboys baseline | #78 (bancs-claude-plugin) | #438 (forestboys) |
+| --- | --- | --- | --- |
+| WC11 mission file created | inconsistent (29/40) | yes | yes |
+| Tests before commit | inconsistent (88/109) | yes | no (a config-only change) |
+| RV6 `review` before a non-trivial commit | skipped (2/31) | yes | no |
+| CG12 `commit-guide` used | inconsistent (14/31) | yes | no |
+| CG9, CG10 batch logged, checklist synced | inconsistent (80/109, 73/109) | yes | not verified |
+| PR12, PR3 `Closes #`, Summary and Test plan | holds | yes | yes |
+| PR13 PR opened through `pr-create` | holds (68/68) | yes | yes |
+| WX15 worktree removed | holds (68/68) | yes | yes |
+| WX8 in-progress label removed | inconsistent (51/58) | yes | yes |
+| WX10 mission moved to `done/` | holds | yes | yes |
+| WX11 PR test plan ticked | inconsistent (22/34) | yes | no (1 of 4 ticked) |
+| WX12 work log removed | holds (1 stale log) | yes | yes |
+
+- **What held:** every step that leaves a trace by construction (PR link, mission, label, cleanup) held in both runs, as in the baseline.
+- **What did not:** in `forestboys` the commit-time steps (tests, `review`, `commit-guide`) were skipped, and the PR test plan was ticked in part. These are the steps the baseline already shows decaying. The Stop hook ([#31](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/31)) records them but does not enforce them.
+- **No nudges** were recorded in either run (`~/.claude/bcp/nudges.jsonl`).
+- **The hook's own record is not reliable yet:** it listed `tests`, `work-log`, `checklist-sync` and `commit-guide` as skipped for #78, and all four were done. A refused commit attempt (commitlint) reset its window, so the retry was checked against nothing ([#89](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/89)). Use `skipped-steps.jsonl` only after that is fixed.
+- **Found by use, filed:** [#83](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/83) (stale confirmed facts), [#85](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/85) (worktree guards), [#86](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/86) (release-please detected as `none`), [#87](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/87) (`git -C`), [#88](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/88) (commit-guard false positive), [#89](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/89).
+
 ## Method
 
 - **GitHub:** the last 20 merged PRs per repo for PR3 and PR12 (release PRs excluded), the last 40 merged PRs for WX11, and all closed issues for WX8.
