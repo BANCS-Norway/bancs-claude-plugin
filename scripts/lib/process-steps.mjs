@@ -12,6 +12,13 @@ const COMMIT_TYPE = /\b(feat|fix|docs|style|refactor|perf|test|build|ci|chore|re
 const DEFAULT_BRANCHES = new Set(['main', 'master', 'HEAD']);
 // Commit types that carry no code, so a test run is not expected.
 const NO_TESTS = new Set(['docs', 'style']);
+// A commit that ran prints git's summary line, `[branch abc1234] subject`. One that was refused (a hook,
+// a guard, nothing staged) does not, and says why. The exit status cannot tell: `git commit ... | tail`
+// ends in 0 either way (#89). Output that shows neither (empty, or `-q`) counts as a commit.
+const COMMITTED = /^\[[^\]\n]+ [0-9a-f]{7,}\]/m;
+const REFUSED = /\bscript failed\b|\bhook (?:failed|exited)\b|\bAborting commit\b|^(?:error|fatal): |\bcommit guard:|\bRefusing to commit\b/m;
+// `git status` prints these too, so they count only when the command does not run it.
+const NOTHING_STAGED = /\bnothing (?:added )?to commit\b|\bno changes added to commit\b/;
 
 export function parseTranscript(text) {
   const entries = [];
@@ -27,13 +34,25 @@ export function parseTranscript(text) {
   return entries;
 }
 
-/** Flatten transcript entries to `prompt` and `tool` events, marking tool calls that errored. */
+/** The text of a tool result: a string, or the text blocks of an array. */
+function resultText(content) {
+  if (typeof content === 'string') return content;
+  if (!Array.isArray(content)) return '';
+  return content.map((b) => (typeof b?.text === 'string' ? b.text : '')).join('\n');
+}
+
+/** Flatten transcript entries to `prompt` and `tool` events, marking tool calls that errored and keeping their output. */
 export function toEvents(entries) {
   const failed = new Set();
+  const outputs = new Map();
   for (const e of entries) {
     const c = e.message?.content;
     if (e.type === 'user' && Array.isArray(c)) {
-      for (const b of c) if (b?.type === 'tool_result' && b.is_error) failed.add(b.tool_use_id);
+      for (const b of c) {
+        if (b?.type !== 'tool_result') continue;
+        if (b.is_error) failed.add(b.tool_use_id);
+        outputs.set(b.tool_use_id, resultText(b.content));
+      }
     }
   }
   const events = [];
@@ -53,6 +72,7 @@ export function toEvents(entries) {
           cwd: e.cwd,
           branch: e.gitBranch,
           failed: failed.has(b.id),
+          output: outputs.get(b.id) ?? '',
         });
       }
     }
@@ -70,9 +90,19 @@ function bare(cmd) {
     .replace(/'[^']*'|"(?:[^"\\]|\\.)*"/g, '""');
 }
 
+// A refused attempt is not a commit: it neither ends a batch nor starts the next one, so the retry
+// is judged on the whole batch since the last commit that went through.
+function refused(ev, cmd) {
+  const out = ev.output ?? '';
+  if (!out || COMMITTED.test(out)) return false;
+  return REFUSED.test(out) || (!/\bgit\s+status\b/.test(cmd) && NOTHING_STAGED.test(out));
+}
+
+// The command is tested first: it is cheap, and most events are not commits, so their (possibly
+// large) output is never scanned.
 function isCommit(ev) {
   const cmd = bash(ev);
-  return !ev.failed && COMMIT.test(bare(cmd)) && !/--dry-run/.test(cmd);
+  return COMMIT.test(bare(cmd)) && !/--dry-run/.test(cmd) && !ev.failed && !refused(ev, cmd);
 }
 
 function wroteWorkLog(ev) {
