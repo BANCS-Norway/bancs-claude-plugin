@@ -82,6 +82,7 @@ Read the first line, `release: <value>`, and say exactly one of these in the pro
 |-----------|-----------------|
 | `semantic-release` | The `bumps:` line names the types that bump and by how much; every other type does not bump. Say what this commit's type does. |
 | `vitepress` | The `bumps:` line names the types that bump the site version; every other type does not. Say what this commit's type does, and that a bump deploys the site. |
+| `release-please` | The `bumps:` line names the types that bump and by how much; every other type does not bump. Say what this commit's type does, and that the bump lands when the release PR is merged, not on this commit. |
 | `none` | Nothing about versions or deployment. |
 | `unknown`, or the script fails, or `${CLAUDE_PLUGIN_ROOT}` is unset | "Release mechanism not detected." No bump claim and no no-bump claim. |
 

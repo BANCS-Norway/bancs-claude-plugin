@@ -18,7 +18,7 @@ the main checkout. The facts are one JSON block; edit them with `/bcp:context`, 
 
 | Fact | Values | Detected from | Re-detected when this changes |
 | --- | --- | --- | --- |
-| `release` | `semantic-release`, `vitepress`, `none`, `unknown` | `semantic-release` in package.json dependencies, a `release` key, or a `.releaserc*` / `release.config.*` file; `vitepress` in dependencies or a `.vitepress/` directory | those inputs (a version bump alone does not count) |
+| `release` | `semantic-release`, `release-please`, `vitepress`, `none`, `unknown` | `semantic-release` in package.json dependencies, a `release` key, or a `.releaserc*` / `release.config.*` file; `release-please` from `release-please-config.json`, `.release-please-manifest.json` or a workflow using `release-please-action`; `vitepress` in dependencies or a `.vitepress/` directory. `unknown` when none of those is found but other release tooling is: a `.changeset/` directory, `.release-it*`, `.versionrc*`, `lerna.json` or a workflow with `release` in its file name. `none` only when nothing release-like is found | those inputs (a version bump alone does not count) |
 | `direnv` | `true`, `false` | `.envrc` in the repo root | whether `.envrc` exists |
 | `ci_dir` | a path, or `none` | `.github/workflows`, `.gitlab-ci.yml`, `.circleci`, `azure-pipelines.yml`, `Jenkinsfile`, `.buildkite` | which of those exist |
 | `default_branch` | a branch name, or `unknown` | `origin/HEAD`, else `git ls-remote --symref origin HEAD` | the origin URL and `origin/HEAD` |
@@ -31,7 +31,7 @@ the main checkout. The facts are one JSON block; edit them with `/bcp:context`, 
 `release` also records `bumps`: which commit types bump a version under that mechanism.
 `semantic-release` lists its defaults (`feat` minor, `fix` and `perf` patch, `BREAKING CHANGE`
 major); a `releaseRules` entry in the project's release config overrides them, and detection does
-not read it. `vitepress` lists `feat` minor, `fix` and `style` patch.
+not read it. `release-please` lists `feat` minor, `fix` and `perf` patch, and a breaking change as minor while `bump-minor-pre-major` is true in `release-please-config.json` (top level or in a package), major otherwise; a value set by hand gets the major default. `vitepress` lists `feat` minor, `fix` and `style` patch.
 
 `in_progress_label` asks GitHub, so only a clear single match is stored. No matching label (`none`),
 several matches, or a `gh` that does not answer are shown but not stored and asked again next time,
@@ -61,7 +61,7 @@ of the inputs above).
 ## Reading and correcting
 
 `/bcp:context` shows the facts; `confirm <fact>` pins the detected value, `confirm <fact> <value>`
-sets yours (`release` accepts `semantic-release`, `vitepress` or `none`), `reset <fact>` forgets one.
+sets yours (`release` accepts `semantic-release`, `release-please`, `vitepress` or `none`), `reset <fact>` forgets one.
 The code is `scripts/lib/project-context.mjs`; gates call `scripts/project-context.mjs get <fact>`.
 
 ## Who reads it
