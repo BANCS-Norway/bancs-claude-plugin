@@ -13,15 +13,20 @@ const tmp = () => mkdtempSync(join(tmpdir(), 'bcp-stop-'));
 
 let n = 0;
 const prompt = (text = 'go') => ({ type: 'user', message: { role: 'user', content: text } });
-const tool = (name, input, extra = {}) => {
+const tool = (name, input, extra = {}, output = 'ok') => {
   const id = `toolu_${++n}`;
   return [
     { type: 'assistant', cwd: '/r', gitBranch: 'feat/31_x', message: { content: [{ type: 'tool_use', id, name, input }] }, ...extra },
-    { type: 'user', message: { content: [{ type: 'tool_result', tool_use_id: id, content: 'ok' }] } },
+    { type: 'user', message: { content: [{ type: 'tool_result', tool_use_id: id, content: output }] } },
   ];
 };
-const bash = (command, extra) => tool('Bash', { command }, extra);
-const commit = (msg = 'feat(x): y', extra) => bash(`git commit -m "${msg}"`, extra);
+const bash = (command, extra, output) => tool('Bash', { command }, extra, output);
+const commit = (msg = 'feat(x): y', extra, output) => bash(`git commit -m "${msg}"`, extra, output);
+const idOf = (entries) => entries[0].message.content[0].id;
+// What a commit prints when it went through, and when a hook or a guard refused it (#89).
+const WENT_THROUGH = '[feat/31_x 4d11a79] feat(x): y\n 1 file changed, 2 insertions(+)';
+const HOOK_REFUSED = '[STARTED] Running tasks\n✖   body\'s lines must not be longer than 100 characters\nhusky - commit-msg script failed (code 1)';
+const GUARD_REFUSED = "bcp commit guard:\n\nRefusing to commit on the default branch 'main'.";
 const check = (...parts) => checkLastTurn(toEvents(parts.flat(Infinity)));
 
 const GOOD = () => [
@@ -73,6 +78,45 @@ test('a commit off an issue branch skips the issue link and has no issue number'
 test('work done before the previous commit does not count for the next batch', () => {
   const [f] = check(prompt(), GOOD(), commit(), commit('fix(x): z'));
   assert.deepEqual(f.skipped, ['tests', 'work-log', 'checklist-sync', 'commit-guide']);
+});
+
+// #89: a refused attempt is not a commit, so the retry is judged on the whole batch.
+test('a refused attempt followed by a retry with every step done produces no finding', () => {
+  assert.deepEqual(check(prompt(), GOOD(), commit('feat(x): y', {}, HOOK_REFUSED), commit('feat(x): y', {}, WENT_THROUGH)), []);
+  assert.deepEqual(check(prompt(), GOOD(), commit('feat(x): y', {}, GUARD_REFUSED), commit('feat(x): y', {}, WENT_THROUGH)), []);
+});
+
+test('a refused attempt followed by a retry with a step missing gives one finding, on the commit that went through', () => {
+  const retry = commit('feat(x): y', {}, WENT_THROUGH);
+  const noLog = [tool('Skill', { skill: 'commit-guide' }), bash('npm test'), bash('node scripts/checklist-sync.mjs 31')];
+  const found = check(prompt(), noLog, commit('feat(x): y', {}, HOOK_REFUSED), retry);
+  assert.equal(found.length, 1);
+  assert.deepEqual(found[0].skipped, ['work-log']);
+  assert.equal(found[0].commitId, idOf(retry));
+});
+
+test('a refused attempt alone is not a commit, and a refusal hidden by a pipe is still seen', () => {
+  assert.deepEqual(check(prompt(), commit('feat(x): y', {}, HOOK_REFUSED)), []);
+  assert.deepEqual(check(prompt(), bash('git add . && git commit -m "x" 2>&1 | tail -6', {}, HOOK_REFUSED)), []);
+});
+
+test('two commits that went through are each judged on their own window', () => {
+  const [f, ...rest] = check(prompt(), GOOD(), commit('feat(x): y', {}, WENT_THROUGH), commit('fix(x): z', {}, WENT_THROUGH));
+  assert.equal(rest.length, 0);
+  assert.deepEqual(f.skipped, ['tests', 'work-log', 'checklist-sync', 'commit-guide']);
+});
+
+test('output without a refusal counts as a commit: no output, a summary line, or a marker beside a summary line', () => {
+  assert.equal(check(prompt(), commit('feat: x', {}, '')).length, 1); // git commit -q prints nothing
+  assert.equal(check(prompt(), commit('feat: x', {}, WENT_THROUGH)).length, 1);
+  assert.equal(check(prompt(), commit('feat: x', {}, `error: a hook warned\n${WENT_THROUGH}`)).length, 1);
+});
+
+test('"nothing to commit" refuses a commit, unless the same command also ran git status', () => {
+  const nothing = 'On branch feat/31_x\nnothing to commit, working tree clean';
+  assert.deepEqual(check(prompt(), commit('feat: x', {}, nothing)), []); // the commit had nothing to commit
+  assert.equal(check(prompt(), bash('git commit -q -m "feat: x"; git status', {}, nothing)).length, 1); // status printed it
+  assert.deepEqual(check(prompt(), commit('feat: x', {}, 'no changes added to commit (use "git add")')), []);
 });
 
 test('only commits in the latest turn are judged, and failed or dry-run commits are ignored', () => {

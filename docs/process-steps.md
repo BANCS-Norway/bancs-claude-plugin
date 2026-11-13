@@ -2,6 +2,8 @@
 
 The `Stop` hook (`scripts/stop-check.mjs`, [#31](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/31)) looks at the turn that just ended. If it made a `git commit`, it checks the work since the previous commit in the session for the steps below, which [the decay baseline](decay-baseline.md) shows are skipped per batch. It records and shows what was skipped. It never blocks.
 
+A commit that was refused (a failing hook, a guard's denial, nothing staged) is not a commit: it does not end a batch, and the retry is checked against everything since the last commit that went through ([#89](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/89)). The hook tells the two apart from the commit's output, because a pipe such as `| tail` hides the exit status: a commit that went through prints git's `[branch abc1234] subject` line, and one that did not says why (`script failed`, `Aborting commit`, `nothing to commit`, `error:`, a guard denial). Output that shows neither, such as an empty result from `git commit -q`, counts as a commit.
+
 | Step | Counts as done when the batch has | Baseline step |
 | --- | --- | --- |
 | `tests` | a test run: `npm test`, `node --test`, `pytest`, `vitest`, `jest`, `go test`, `cargo test`, `scripts/test-*.sh`, `validate.mjs`. Not required for `docs` and `style` commits. | tests before commit |
