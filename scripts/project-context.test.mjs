@@ -89,6 +89,61 @@ test('release: semantic-release wins when both are present', () => {
   assert.equal(both.value, 'semantic-release');
 });
 
+const RP_WORKFLOW = 'on: push\njobs:\n  rp:\n    steps:\n      - uses: googleapis/release-please-action@v4\n';
+
+test('release: release-please, by config, manifest or workflow, with bumps that follow its config', () => {
+  const byConfig = releaseOf({ 'release-please-config.json': '{"packages":{".":{}}}' });
+  assert.equal(byConfig.value, 'release-please');
+  assert.match(byConfig.from, /release-please-config\.json/);
+  assert.deepEqual(byConfig.bumps, { feat: 'minor', fix: 'patch', perf: 'patch', 'BREAKING CHANGE': 'major' });
+  assert.equal(releaseOf({ '.release-please-manifest.json': '{".":"1.0.0"}' }).value, 'release-please');
+  const byWorkflow = releaseOf({ '.github/workflows/rp.yml': RP_WORKFLOW });
+  assert.equal(byWorkflow.value, 'release-please');
+  assert.match(byWorkflow.from, /\.github\/workflows\/rp\.yml/);
+});
+
+test('release: release-please lists a breaking change as minor while bump-minor-pre-major is true', () => {
+  const top = releaseOf({ 'release-please-config.json': '{"bump-minor-pre-major":true}' });
+  assert.equal(top.bumps['BREAKING CHANGE'], 'minor');
+  const perPackage = releaseOf({ 'release-please-config.json': '{"packages":{".":{"bump-minor-pre-major":true}}}' });
+  assert.equal(perPackage.bumps['BREAKING CHANGE'], 'minor');
+  const off = releaseOf({ 'release-please-config.json': '{"bump-minor-pre-major":false}' });
+  assert.equal(off.bumps['BREAKING CHANGE'], 'major');
+});
+
+test('release: release-please with a config that cannot be parsed still detects it and says so', () => {
+  const got = releaseOf({ 'release-please-config.json': '{ not json' });
+  assert.equal(got.value, 'release-please');
+  assert.match(got.note, /cannot be read/);
+});
+
+test('release: release-please beats VitePress, semantic-release beats release-please', () => {
+  const withSite = releaseOf({ 'release-please-config.json': '{}', 'package.json': pkg({ devDependencies: { vitepress: '1' } }) });
+  assert.equal(withSite.value, 'release-please');
+  const both = releaseOf({ 'release-please-config.json': '{}', 'package.json': pkg({ devDependencies: { 'semantic-release': '1' } }) });
+  assert.equal(both.value, 'semantic-release');
+});
+
+test('release: unknown, not none, when release tooling is present but not recognised', () => {
+  const workflow = releaseOf({ '.github/workflows/release.yml': 'on: push' });
+  assert.equal(workflow.value, 'unknown');
+  assert.match(workflow.from, /\.github\/workflows\/release\.yml/);
+  assert.equal(workflow.bumps, undefined);
+  assert.equal(releaseOf({ '.changeset/config.json': '{}' }).value, 'unknown');
+  assert.equal(releaseOf({ '.release-it.json': '{}' }).value, 'unknown');
+  // a workflow that has nothing to do with releasing is still none
+  assert.equal(releaseOf({ '.github/workflows/ci.yml': 'on: push' }).value, 'none');
+});
+
+test('release: a value set by hand to release-please gets the default bumps', () => {
+  const home = tmp();
+  const dir = repo({ 'package.json': pkg() });
+  assert.equal(run('confirm release release-please', { cwd: dir, home }).code, 0);
+  const entry = stored(dir, home).release;
+  assert.equal(entry.value, 'release-please');
+  assert.equal(entry.bumps.feat, 'minor');
+});
+
 // ---- the other facts ------------------------------------------------------------------------
 
 test('direnv and ci_dir', () => {

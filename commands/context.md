@@ -12,7 +12,7 @@ The gates (the skills) used to guess what kind of project they ran in, and repea
 on every run. bcp now detects nine facts once per project and records them in the project's memory
 folder (`project_context.md`), where every gate reads the same answer:
 
-`release` (`semantic-release`, `vitepress`, `none` or `unknown`, and which commit types bump a
+`release` (`semantic-release`, `release-please`, `vitepress`, `none` or `unknown`, and which commit types bump a
 version), `direnv`, `ci_dir`, `default_branch`, `test_command`, `repo`, `pr_title`, `commit_types` and
 `in_progress_label`.
 

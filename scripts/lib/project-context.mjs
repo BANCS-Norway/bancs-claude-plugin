@@ -98,9 +98,14 @@ export function memoryDir(main, home = homedir()) {
 // `detect(inputs, root)` (the answer). The fingerprint is a hash of `inputs`, so detection runs only
 // when the inputs change. `parse(text)` validates a value the user sets by hand.
 
+/** release-please: `feat` minor, `fix` and `perf` patch; a breaking change is minor while `bump-minor-pre-major` is true, else major. */
+const releasePleaseBumps = (preMajor) => ({ feat: 'minor', fix: 'patch', perf: 'patch', 'BREAKING CHANGE': preMajor ? 'minor' : 'major' });
+
+// What a value set by hand gets. release-please's own config can change it, so detection builds it per project.
 const BUMPS = {
   'semantic-release': { feat: 'minor', fix: 'patch', perf: 'patch', 'BREAKING CHANGE': 'major' },
   vitepress: { feat: 'minor', fix: 'patch', style: 'patch' },
+  'release-please': releasePleaseBumps(false),
   none: undefined,
 };
 const SEMANTIC_NOTE = 'semantic-release defaults; a releaseRules entry in the release config overrides them';
@@ -109,14 +114,49 @@ const RELEASERC = [
   '.releaserc.mjs', 'release.config.js', 'release.config.cjs', 'release.config.mjs', 'release.config.ts',
 ];
 const VITEPRESS_DIRS = ['.vitepress', 'docs/.vitepress'];
+const RELEASE_PLEASE_FILES = ['release-please-config.json', '.release-please-manifest.json'];
+// Release tooling bcp does not know how to read: seeing one makes the answer `unknown`, not `none`.
+const OTHER_RELEASE_TOOLING = ['.changeset', '.release-it.json', '.release-it.yaml', '.release-it.yml', '.versionrc', '.versionrc.json', 'lerna.json'];
 const CI_PATHS = ['.github/workflows', '.gitlab-ci.yml', '.circleci', 'azure-pipelines.yml', 'Jenkinsfile', '.buildkite'];
 
 const releaseExtras = (value) => (BUMPS[value] ? { bumps: BUMPS[value] } : {});
 
+/** The workflow file names under .github/workflows, sorted; empty when there are none. */
+function workflowFiles(root) {
+  try {
+    return readdirSync(join(root, '.github', 'workflows')).filter((f) => /\.ya?ml$/.test(f)).sort();
+  } catch {
+    return [];
+  }
+}
+
+/** `bump-minor-pre-major` from release-please-config.json (top level or any package): true, false, or undefined when the file cannot be read. */
+function releasePleasePreMajor(root) {
+  const text = read(root, 'release-please-config.json');
+  if (text === null) return false;
+  try {
+    const config = JSON.parse(text);
+    return config['bump-minor-pre-major'] === true || Object.values(config.packages ?? {}).some((p) => p?.['bump-minor-pre-major'] === true);
+  } catch {
+    return undefined;
+  }
+}
+
 function releaseInputs(root) {
   const { unreadable, pkg } = readPackage(root);
   const deps = { ...pkg?.dependencies, ...pkg?.devDependencies };
+  const workflows = workflowFiles(root);
+  const releasePlease = [
+    ...RELEASE_PLEASE_FILES.filter((f) => existsSync(join(root, f))),
+    ...workflows.filter((f) => /release-please-action/.test(read(join(root, '.github', 'workflows'), f) ?? '')).map((f) => `.github/workflows/${f}`),
+  ];
   return {
+    releasePlease,
+    preMajor: releasePlease.length ? releasePleasePreMajor(root) : false,
+    otherTooling: [
+      ...OTHER_RELEASE_TOOLING.filter((f) => existsSync(join(root, f))),
+      ...workflows.filter((f) => /release/i.test(f)).map((f) => `.github/workflows/${f}`),
+    ],
     unreadable,
     semanticDep: 'semantic-release' in deps,
     releaseKey: Boolean(pkg && 'release' in pkg),
@@ -135,10 +175,17 @@ function detectRelease(i) {
   if (semantic.length) {
     return { value: 'semantic-release', from: semantic.join('; '), ...releaseExtras('semantic-release'), note: SEMANTIC_NOTE };
   }
+  if (i.releasePlease.length) {
+    const note = i.preMajor === undefined
+      ? 'release-please-config.json cannot be read, so a breaking change is listed as major; check bump-minor-pre-major'
+      : 'release-please defaults; bump-minor-pre-major is read from release-please-config.json';
+    return { value: 'release-please', from: i.releasePlease.join('; '), bumps: releasePleaseBumps(i.preMajor), note };
+  }
   const vitepress = [i.vitepressDep && 'vitepress in the package.json dependencies', ...i.vitepressDir.map((d) => `${d}/`)].filter(Boolean);
   if (vitepress.length) return { value: 'vitepress', from: vitepress.join('; '), ...releaseExtras('vitepress') };
   if (i.unreadable) return { value: 'unknown', from: 'package.json exists but cannot be read or parsed' };
-  return { value: 'none', from: 'no semantic-release or VitePress marker found' };
+  if (i.otherTooling.length) return { value: 'unknown', from: `release tooling bcp does not recognise: ${i.otherTooling.join('; ')}` };
+  return { value: 'none', from: 'no release tooling found (looked for semantic-release, release-please, VitePress, and other release config or workflows)' };
 }
 
 function detectRepo(i) {
@@ -181,12 +228,7 @@ const COMMITLINT = [
 
 function prTitleInputs(root) {
   const { pkg } = readPackage(root);
-  let workflows = [];
-  try {
-    workflows = readdirSync(join(root, '.github', 'workflows')).filter((f) => /\.ya?ml$/.test(f)).sort();
-  } catch {
-    // no workflows
-  }
+  const workflows = workflowFiles(root);
   return {
     commitlint: COMMITLINT.filter((f) => existsSync(join(root, f))),
     pkgKey: Boolean(pkg && 'commitlint' in pkg),
