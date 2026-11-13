@@ -1,3 +1,10 @@
+## [1.13.2](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.13.1...v1.13.2) (2026-11-13)
+
+
+### Bug Fixes
+
+* **stop-check:** a refused commit attempt no longer resets the batch window ([586ad89](https://github.com/BANCS-Norway/bancs-claude-plugin/commit/586ad89aa276afc8e9a3f0a409983e4dcef63554)), closes [#89](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/89)
+
 ## [1.13.1](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.13.0...v1.13.1) (2026-11-12)
 
 
