@@ -313,6 +313,28 @@ function detectInProgressLabel(i, root) {
   return { value: 'none', from: 'no label with "in progress" in its name; asked again next time', transient: true };
 }
 
+// Whether the repo already works in worktrees: a `.worktrees/` folder in the main checkout, or a bcp
+// work log (a numbered folder under the memory folder's `issues/`) for it. Read from `main`, so a
+// session inside a linked worktree sees what one in the primary clone sees. (work-log.mjs imports
+// this file, so the log folder is read directly here.)
+function worktreeGuardInputs(root, home = homedir()) {
+  const main = checkoutRoots(root)?.main ?? root;
+  let logs = false;
+  try {
+    logs = readdirSync(join(memoryDir(main, home), 'issues'), { withFileTypes: true }).some((e) => e.isDirectory() && /^\d+$/.test(e.name));
+  } catch {
+    // no issues folder: no logs
+  }
+  return { worktrees: existsSync(join(main, '.worktrees')), logs };
+}
+
+function detectWorktreeGuard(i) {
+  const used = [i.worktrees && 'a .worktrees/ folder', i.logs && 'a bcp work log'].filter(Boolean);
+  return used.length
+    ? { value: 'on', from: used.join(' and ') }
+    : { value: 'off', from: 'no .worktrees/ folder and no bcp work log: the repo has not opted in' };
+}
+
 const anyText = (text) => {
   if (!text) throw new Error('a value is needed');
   return text;
@@ -392,17 +414,25 @@ export const FACTS = {
     detect: detectInProgressLabel,
     parse: anyText,
   },
+  worktree_guard: {
+    inputs: worktreeGuardInputs,
+    detect: detectWorktreeGuard,
+    parse: (text) => {
+      if (text !== 'on' && text !== 'off') throw new Error('worktree_guard is on or off');
+      return text;
+    },
+  },
 };
 
 // ---- the file -----------------------------------------------------------------------------
 
-const POINTER = '- [Project context](project_context.md) — release, direnv, CI, default branch, test command, repo, PR title format, commit types and in-progress label, detected once for every bcp gate; /bcp:context to confirm or correct';
+const POINTER = '- [Project context](project_context.md) — release, direnv, CI, default branch, test command, repo, PR title format, commit types, in-progress label and worktree guard, detected once for every bcp gate; /bcp:context to confirm or correct';
 
 function render(facts) {
   return [
     '---',
     'name: project_context',
-    'description: Project facts bcp detected once (release, direnv, CI, default branch, test command, repo, PR title format, commit types, in-progress label); every gate reads them. Confirm or correct with /bcp:context.',
+    'description: Project facts bcp detected once (release, direnv, CI, default branch, test command, repo, PR title format, commit types, in-progress label, worktree guard); every gate reads them. Confirm or correct with /bcp:context.',
     'type: project',
     '---',
     '',

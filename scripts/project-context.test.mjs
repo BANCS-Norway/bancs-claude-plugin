@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawn, spawnSync } from 'node:child_process';
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { delimiter, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -500,6 +500,66 @@ test('the file is indexed once in MEMORY.md, keeping what is already there', () 
   const index = readFileSync(join(memory, 'MEMORY.md'), 'utf8');
   assert.match(index, /- \[Other\]\(other\.md\) — keep me\n- \[Project context\]\(project_context\.md\)/);
   assert.equal(index.match(/project_context\.md/g).length, 1);
+});
+
+// ---- worktree_guard (#85) -------------------------------------------------------------------
+
+/** Where `home` keeps the memory folder of `dir`'s project. */
+const memoryOf = (dir, home) => memoryDir(checkoutRoots(dir).main, home);
+const guardOf = (dir, home) => run('get worktree_guard', { cwd: dir, home }).out.split('\n')[0];
+
+test('worktree_guard: off for a repo that never opted in', () => {
+  const home = tmp();
+  const dir = repo();
+  assert.equal(guardOf(dir, home), 'worktree_guard: off');
+  assert.match(stored(dir, home).worktree_guard.from, /has not opted in/);
+});
+
+test('worktree_guard: on for a .worktrees/ folder, and detected again when it appears', () => {
+  const home = tmp();
+  const dir = repo();
+  assert.equal(guardOf(dir, home), 'worktree_guard: off');
+  mkdirSync(join(dir, '.worktrees'));
+  assert.equal(guardOf(dir, home), 'worktree_guard: on');
+  assert.match(stored(dir, home).worktree_guard.from, /\.worktrees\//);
+});
+
+test('worktree_guard: on for a bcp work log, off for an issues folder with none', () => {
+  const home = tmp();
+  const dir = repo();
+  mkdirSync(join(memoryOf(dir, home), 'issues', 'notes'), { recursive: true });
+  assert.equal(guardOf(dir, home), 'worktree_guard: off');
+  mkdirSync(join(memoryOf(dir, home), 'issues', '85'), { recursive: true });
+  assert.equal(guardOf(dir, home), 'worktree_guard: on');
+  assert.match(stored(dir, home).worktree_guard.from, /work log/);
+});
+
+test('worktree_guard: a linked worktree reads the main checkout, not its own folder', () => {
+  const home = tmp();
+  const dir = repo();
+  mkdirSync(join(dir, '.worktrees'));
+  git(dir, 'worktree', 'add', '-q', '-b', 'feat/1_x', join(dir, '.worktrees', 'feat-1-x'));
+  const wt = join(dir, '.worktrees', 'feat-1-x');
+  assert.equal(guardOf(wt, home), 'worktree_guard: on');
+  rmSync(join(dir, '.worktrees'), { recursive: true, force: true });
+  const other = repo();
+  git(other, 'worktree', 'add', '-q', '-b', 'feat/2_y', join(tmp(), 'wt'));
+  assert.equal(guardOf(other, tmp()), 'worktree_guard: off');
+});
+
+test('worktree_guard: confirm on|off pins it, anything else is refused, reset detects it again', () => {
+  const home = tmp();
+  const dir = repo();
+  assert.match(run('confirm worktree_guard on', { cwd: dir, home }).out, /^worktree_guard: on\b/m);
+  assert.equal(guardOf(dir, home), 'worktree_guard: on'); // no .worktrees/, but confirmed
+  mkdirSync(join(dir, '.worktrees'));
+  assert.match(run('confirm worktree_guard off', { cwd: dir, home }).out, /^worktree_guard: off\b/m);
+  assert.equal(guardOf(dir, home), 'worktree_guard: off'); // .worktrees/ exists, but confirmed off
+  const bad = run('confirm worktree_guard maybe', { cwd: dir, home });
+  assert.equal(bad.code, 1);
+  assert.match(bad.err, /on or off/);
+  assert.equal(run('reset worktree_guard', { cwd: dir, home }).code, 0);
+  assert.equal(guardOf(dir, home), 'worktree_guard: on');
 });
 
 // ---- the command line ------------------------------------------------------------------------

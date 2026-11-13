@@ -27,6 +27,7 @@ the main checkout. The facts are one JSON block; edit them with `/bcp:context`, 
 | `pr_title` | `conventional`, `unknown`, or a format you set | a commitlint config (file or `commitlint` key in package.json), or a workflow using `action-semantic-pull-request` | those inputs |
 | `commit_types` | the allowed types, space separated (`feat fix docs`), or `unknown` | `type-enum` in a data commitlint config (`.commitlintrc`, `.commitlintrc.json` or the `commitlint` key in package.json); a config that extends `@commitlint/config-conventional` with no `type-enum` gets that preset's types; `scope-enum` is recorded as `scopes`. A `.js`/`.ts` config is code and is not run; YAML is not read; any other shared config is not followed. Those are `unknown` | the commitlint config files (their content) and the package.json key |
 | `in_progress_label` | a label name, `none`, or `unknown` | `gh label list`: the `status: in progress` label, else the one label with "in progress" in its name | the origin URL |
+| `worktree_guard` | `on`, `off` | `on` when the main checkout has a `.worktrees/` folder or the repo has a bcp work log (a numbered folder under the memory folder's `issues/`); otherwise `off`, so a repo that never opted in is never blocked. `confirm worktree_guard on\|off` sets it | whether either exists |
 
 `release` also records `bumps`: which commit types bump a version under that mechanism.
 `semantic-release` lists its defaults (`feat` minor, `fix` and `perf` patch, `BREAKING CHANGE`
@@ -72,6 +73,7 @@ The code is `scripts/lib/project-context.mjs`; gates call `scripts/project-conte
 | `default_branch` | `worktree-create` (through the preflight), `worktree-resume`, `pr-create` |
 | `direnv` | `worktree-create` |
 | `in_progress_label` | `worktree-create`, `worktree-cleanup`, `issues` |
+| `worktree_guard` | the worktree guards (#85) |
 | `pr_title` | `pr-create` |
 | `ci_dir`, `test_command`, `repo` | nothing yet |
 
