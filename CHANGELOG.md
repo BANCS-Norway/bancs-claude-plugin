@@ -1,3 +1,10 @@
+## [1.13.3](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.13.2...v1.13.3) (2026-11-13)
+
+
+### Bug Fixes
+
+* **context:** detect release-please, and report unknown for release tooling it does not recognise ([b454efe](https://github.com/BANCS-Norway/bancs-claude-plugin/commit/b454efedb26e68277b6c8888a9cac9a8b9f40ef3)), closes [#86](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/86)
+
 ## [1.13.2](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.13.1...v1.13.2) (2026-11-13)
 
 
