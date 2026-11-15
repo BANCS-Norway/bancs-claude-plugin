@@ -1,3 +1,10 @@
+# [1.14.0](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.13.3...v1.14.0) (2026-11-15)
+
+
+### Features
+
+* **hooks:** deny every git -C use ([601c540](https://github.com/BANCS-Norway/bancs-claude-plugin/commit/601c5405aed555fdfa1a13f05eaf907547c155a1)), closes [#87](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/87)
+
 ## [1.13.3](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.13.2...v1.13.3) (2026-11-13)
 
 
