@@ -52,6 +52,16 @@ test('isCommitCommand matches a git commit command and nothing else', () => {
 
 const lines = (...l) => l.join('\n');
 
+// #87: the command-position rule is shared with the git -C guard, so a commit after a keyword, a brace, a wrapper or a path is seen too.
+test('isCommitCommand sees a commit after a keyword, a brace, a wrapper or a path to git', () => {
+  for (const c of ['if true; then git commit -m x; fi', 'for d in a; do git commit -m x; done', '{ git commit -m x; }', 'sudo git commit -m x', '/usr/bin/git commit -m x', 'git -p commit -m x', 'git --git-dir g commit -m x']) {
+    assert.equal(isCommitCommand(c), true, c);
+  }
+  for (const c of ['echo then git commit', 'ls /usr/bin/git commit', 'git --no-pager log commit']) {
+    assert.equal(isCommitCommand(c), false, c);
+  }
+});
+
 // #88: a heredoc body, a PR body or a comment that mentions a commit is text, not a command.
 test('isCommitCommand: text that only mentions a commit is not a commit', () => {
   for (const c of [

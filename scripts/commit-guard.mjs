@@ -5,7 +5,8 @@
 // about stray staged files. A refusal is the documented JSON `permissionDecision: "deny"`, whose
 // reason Claude sees and passes on with the way out. Commit message format stays with commitlint.
 // Only staged content is checked: `git commit -a` and `git commit <path>` commit changes that are not
-// staged yet, and `git -C <dir> commit` is not recognised, so those pass unchecked.
+// staged yet, so those pass unchecked. `git -C <dir> commit` never gets here: git-c-guard.mjs denies
+// every `git -C` first (#87).
 // Never fails the session (docs/hook-conventions.md, rule 4): anything unexpected exits 0 silently.
 import { readPayload, shouldRun } from './lib/hook.mjs';
 import { checkCommit, isCommitCommand } from './lib/commit-guard.mjs';
