@@ -36,6 +36,10 @@
             "type": "command",
             "if": "Bash(git commit *)",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/commit-guard.mjs\""
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/git-c-guard.mjs\""
           }
         ]
       }

@@ -80,7 +80,7 @@ Docs base: `https://code.claude.com/docs/en/`
 - **fills-gap:** no native rule is conditioned on the current branch or on what is staged.
 - **retire-when:** permission rules or a setting can condition on the current branch (a protected-branch setting), and a native staged-file secret or size check ships.
 - **CANNOT-CONFIRM:** the version that added the hook `if` field; whether exit code 2 on stderr blocks a `PreToolUse` call the same way (the hook uses the JSON `deny` above instead); whether `PreToolUse` hooks run under `bypassPermissions`; whether a plugin's `hooks.json` accepts `if` and `onFailure` (`onFailure` needs 2.1.295). The rest of the changelog before 2.1.318 was not read verbatim.
-- **Not covered by the hook:** only staged content is checked, so `git commit -a`, `git commit <path>` and `git -C <dir> commit` pass unchecked.
+- **Not covered by the hook:** only staged content is checked, so `git commit -a` and `git commit <path>` pass unchecked. `git -C <dir> commit` never reaches it: HK6 denies every `git -C` first.
 - **checked:** 2026-11
 
 ### HK5 — SessionStart points a new session at the `issues` skill (hook, #47)
@@ -90,6 +90,15 @@ Docs base: `https://code.claude.com/docs/en/`
 - **fills-gap:** a skill cannot be started by an event, only suggested to the model.
 - **retire-when:** a skill can declare a SessionStart trigger, or hooks can invoke a skill.
 - **CANNOT-CONFIRM:** the SessionStart `source` values beyond `startup`, `resume`, `clear` and `compact` (the hook treats any other value as not new); whether `additionalContext` reaches the model in a plugin's hook the same way as in settings (to be seen in a live session).
+- **checked:** 2026-11
+
+### HK6 — PreToolUse guard that denies every `git -C` (hook, #87)
+
+- **Native:** a user can deny the command in their own settings with `"permissions": {"deny": ["Bash(git -C *)"]}`. The issue states that a plugin cannot ship a `permissions.deny` rule, and that is why this is a hook; that claim, and whether a deny rule matches `git -C` after `&&`, `;` or `$(`, were **not re-read in the docs for this row** (see CANNOT-CONFIRM). The hook mechanics are those of HK4. [permissions](https://code.claude.com/docs/en/permissions.md#wildcard-patterns), [how a hook resolves](https://code.claude.com/docs/en/hooks.md#how-a-hook-resolves)
+- **Verdict:** PARTIAL. A user-level deny rule covers the plain command; a plugin cannot install one.
+- **fills-gap:** a plugin cannot ship a permission rule, so a repo that uses bcp has no way to deny `git -C` without each user editing their settings.
+- **retire-when:** a plugin can ship `permissions.deny` rules in its manifest; then replace the hook with a rule.
+- **CANNOT-CONFIRM:** that a plugin cannot ship `permissions.deny` (the issue's claim); how a deny rule treats a `git -C` after `&&`, `;`, `|` or inside `$(...)`.
 - **checked:** 2026-11
 
 ## Other native-relevant rows

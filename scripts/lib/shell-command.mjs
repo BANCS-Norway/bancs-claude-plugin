@@ -87,3 +87,25 @@ function scan(s, i, nested = false, depth = 0) {
 export function codeOf(command) {
   return scan(String(command), 0).out;
 }
+
+// Where a `git` command can start, for the guards that look for one in `codeOf()` output (#87).
+// A command starts at the beginning, after ; & | ( { or a newline, then may be led by `VAR=x`
+// assignments, a keyword (then, do, else, if, ...) or a wrapper that runs its next word (sudo, env,
+// command, time, xargs, ...) and `!`. A wrapper's own options (`sudo -u root git`) are not read: that
+// form passes. `git` may carry a path. Its global options come before the subcommand: `-c k=v`, `-p`,
+// `--no-pager`, `--exec-path=x`, and the few that take their value as a separate word. They are listed
+// by name so that `git --no-pager log -C` is not read as `--no-pager` taking `log`.
+// A word stops at a separator, not only at a space: `\S*` here would run over a long row of `;` from every
+// one of them, and a hook must not stall on an odd command.
+const WORD = String.raw`[^\s;&|(){}]`;
+// After the separator only blanks are skipped, not `\s`: a newline is a separator itself, and `\s*` would
+// run across a long row of them from each one.
+const START = String.raw`(?:^|[;&|({\n][ \t]*)`;
+const LEADERS = String.raw`(?:(?:then|do|else|elif|if|while|until|time|command|exec|sudo|env|xargs|nohup|!)\s+|\w+=${WORD}+\s+)*`;
+const GIT = String.raw`(?:${WORD}*/)?git\s+`;
+const GLOBAL_OPTIONS = String.raw`(?:(?:-c\s+\S+|-[pP]|--(?:git-dir|work-tree|namespace|super-prefix|config-env)\s+\S+|--[\w-]+(?:=\S+)?)\s+)*`;
+
+/** A RegExp for `git <global options> <tail>` in command position; `tail` is a regex source. Test it against `codeOf()` output. */
+export function gitCommandPattern(tail) {
+  return new RegExp(START + LEADERS + GIT + GLOBAL_OPTIONS + tail);
+}
