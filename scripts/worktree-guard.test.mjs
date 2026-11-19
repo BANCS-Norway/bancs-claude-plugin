@@ -121,3 +121,109 @@ test('edit guard: a file that is a symlink out of the repo is judged where it la
   spawnSync('ln', ['-s', elsewhere, join(main, 'link-parent', 'out')]);
   assert.equal(denied(runHook(editGuard, edit(join(main, 'link-parent', 'out', 'real.txt'), main), { cwd: main, home })), false);
 });
+
+// ---- the PR guard -----------------------------------------------------------------------------
+
+const prGuard = resolve(dirname(fileURLToPath(import.meta.url)), 'pr-guard.mjs');
+const bash = (command, cwd) => ({ hook_event_name: 'PreToolUse', tool_name: 'Bash', cwd, tool_input: { command } });
+const PR = 'gh pr create --title "feat: x" --body-file b.md';
+
+/** A guarded repo whose branch `feat/1_x` is checked out and pushed: { main, home }. */
+function pushedBranch(value = 'on') {
+  const { main, home } = guardedRepo(value);
+  git(main, 'switch', '-q', '-c', 'feat/1_x');
+  git(main, 'push', '-q', '-u', 'origin', 'feat/1_x');
+  return { main, home };
+}
+const commit = (dir) => {
+  writeFileSync(join(dir, `f${Math.random()}.txt`), 'x');
+  git(dir, 'add', '-A');
+  git(dir, 'commit', '-q', '-m', 'work');
+};
+
+test('pr guard: a branch with no upstream is denied, and the reason says to wait for "pushed"', () => {
+  const { main, home } = guardedRepo();
+  git(main, 'switch', '-q', '-c', 'feat/1_x');
+  const r = runHook(prGuard, bash(PR, main), { cwd: main, home });
+  assert.equal(r.status, 0);
+  assert.ok(denied(r));
+  assert.match(reason(r), /no upstream/);
+  assert.match(reason(r), /"pushed"/);
+  assert.match(reason(r), /confirm worktree_guard off/);
+});
+
+test('pr guard: unpushed commits are denied with their count; a pushed branch is allowed', () => {
+  const { main, home } = pushedBranch();
+  assert.equal(denied(runHook(prGuard, bash(PR, main), { cwd: main, home })), false);
+  commit(main);
+  const one = runHook(prGuard, bash(PR, main), { cwd: main, home });
+  assert.ok(denied(one));
+  assert.match(reason(one), /1 commit its upstream lacks/);
+  commit(main);
+  assert.match(reason(runHook(prGuard, bash(PR, main), { cwd: main, home })), /2 commits/);
+  git(main, 'push', '-q');
+  assert.equal(denied(runHook(prGuard, bash(PR, main), { cwd: main, home })), false);
+});
+
+test('pr guard: the branch judged is the one in the directory the command cds into', () => {
+  const { main, home } = pushedBranch();
+  const wt = join(main, '.worktrees', 'feat-2-y');
+  git(main, 'worktree', 'add', '-q', '-b', 'feat/2_y', wt); // no upstream
+  assert.ok(denied(runHook(prGuard, bash(`cd ${wt} && ${PR}`, main), { cwd: main, home })));
+  assert.ok(denied(runHook(prGuard, bash(`cd "${wt}" && ${PR}`, main), { cwd: main, home })));
+  assert.ok(denied(runHook(prGuard, bash(`cd .worktrees/feat-2-y; ${PR}`, main), { cwd: main, home })));
+  // the shell sits in the unpushed worktree, the command moves to the pushed branch
+  assert.equal(denied(runHook(prGuard, bash(`cd ${main} && ${PR}`, wt), { cwd: wt, home })), false);
+  assert.ok(denied(runHook(prGuard, bash(PR, wt), { cwd: wt, home })));
+});
+
+test('pr guard: a target it cannot tell is not judged', () => {
+  const { main, home } = guardedRepo();
+  git(main, 'switch', '-q', '-c', 'feat/1_x'); // no upstream: would be denied in place
+  for (const c of [`cd $WT && ${PR}`, `cd "$(pwd)/x" && ${PR}`, `cd ${join(main, 'nope')} && ${PR}`]) {
+    assert.equal(denied(runHook(prGuard, bash(c, main), { cwd: main, home })), false, c);
+  }
+});
+
+test('pr guard: text that only mentions the command, and other gh commands, are not judged', () => {
+  const { main, home } = guardedRepo();
+  git(main, 'switch', '-q', '-c', 'feat/1_x');
+  for (const c of [
+    'gh pr create --help',
+    'gh pr view 1',
+    'gh pr list --search "gh pr create"',
+    'gh issue comment 1 --body "run gh pr create later"',
+    "cat > note.md <<'EOF'\nthen gh pr create --title x\nEOF\nls",
+    'echo "gh pr create"',
+    'git log --grep "gh pr create"',
+  ]) {
+    assert.equal(denied(runHook(prGuard, bash(c, main), { cwd: main, home })), false, c);
+  }
+  for (const c of ['FOO=1 gh pr create -f', 'git add . && gh pr create -f', 'if true; then gh pr create -f; fi', '/usr/bin/gh pr create -f']) {
+    assert.ok(denied(runHook(prGuard, bash(c, main), { cwd: main, home })), c);
+  }
+});
+
+test('pr guard: with the fact off, or a repo that never opted in, a detached HEAD, or outside a repo, nothing is blocked', () => {
+  const off = guardedRepo('off');
+  git(off.main, 'switch', '-q', '-c', 'feat/1_x');
+  assert.equal(denied(runHook(prGuard, bash(PR, off.main), { cwd: off.main, home: off.home })), false);
+  const { dir } = repoWithOrigin();
+  git(dir, 'switch', '-q', '-c', 'feat/1_x');
+  assert.equal(denied(runHook(prGuard, bash(PR, dir), { cwd: dir, home: tmp() })), false);
+  const { main, home } = guardedRepo();
+  git(main, 'switch', '-q', '--detach');
+  assert.equal(denied(runHook(prGuard, bash(PR, main), { cwd: main, home })), false);
+  const elsewhere = tmp();
+  assert.equal(denied(runHook(prGuard, bash(PR, elsewhere), { cwd: elsewhere, home })), false);
+});
+
+test('pr guard: unreadable payloads, other tools and other events do nothing', () => {
+  const { main, home } = guardedRepo();
+  git(main, 'switch', '-q', '-c', 'feat/1_x');
+  for (const bad of ['not json', '[]', 'null', '', '{}', JSON.stringify({ hook_event_name: 'PreToolUse', tool_name: 'Bash', tool_input: {} }), JSON.stringify({ hook_event_name: 'PostToolUse', tool_name: 'Bash', cwd: main, tool_input: { command: PR } })]) {
+    const r = runHook(prGuard, bad, { cwd: main, home });
+    assert.equal(r.status, 0, bad);
+    assert.equal(r.raw, '', bad);
+  }
+});

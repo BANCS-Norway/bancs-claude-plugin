@@ -109,3 +109,8 @@ const GLOBAL_OPTIONS = String.raw`(?:(?:-c\s+\S+|-[pP]|--(?:git-dir|work-tree|na
 export function gitCommandPattern(tail) {
   return new RegExp(START + LEADERS + GIT + GLOBAL_OPTIONS + tail);
 }
+
+/** A RegExp for `gh <tail>` in command position (a path to gh, the same leaders as git); `tail` is a regex source. Test it against `codeOf()` output. */
+export function ghCommandPattern(tail) {
+  return new RegExp(START + LEADERS + String.raw`(?:${WORD}*/)?gh\s+` + tail);
+}
