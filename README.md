@@ -55,6 +55,17 @@ it changes. In the bcp repo it also lists the shims not checked since that chang
 session until `/bcp:shim-review` marks them. Hooks are Node `.mjs` scripts that filter first and share
 one payload helper; see [docs/hook-conventions.md](./docs/hook-conventions.md) before adding one.
 
+**Worktree guards.** Two `PreToolUse` hooks keep a bcp session on the worktree workflow:
+`scripts/edit-guard.mjs` refuses `Write`, `Edit` and `NotebookEdit` on a file in the main checkout
+(`.worktrees/` and `.claude/` stay open), and `scripts/pr-guard.mjs` refuses `gh pr create` until the
+branch has an upstream and no unpushed commits, so the PR waits for the human's push. They act only in a
+repo whose `worktree_guard` fact is `on`: detected `on` when the repo already has a `.worktrees/` folder
+or a bcp work log, `off` otherwise. Turn it on or off with `/bcp:context confirm worktree_guard on|off`.
+The switch is per user and repo. The guards guide a bcp session and nothing else: a teammate without bcp
+is not guarded, so a rule everyone must follow belongs in branch protection, a git hook or CI. The PR
+guard reads local refs only (no network) and judges the branch in the last `cd` target before the
+command; a target it cannot resolve, such as `cd $DIR`, is not judged.
+
 ### Workforces
 
 The engine is **theme-agnostic**: it assigns issues to members of the *active
