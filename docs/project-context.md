@@ -34,6 +34,11 @@ the main checkout. The facts are one JSON block; edit them with `/bcp:context`, 
 major); a `releaseRules` entry in the project's release config overrides them, and detection does
 not read it. `release-please` lists `feat` minor, `fix` and `perf` patch, and a breaking change as minor while `bump-minor-pre-major` is true in `release-please-config.json` (top level or in a package), major otherwise; a value set by hand gets the major default. `vitepress` lists `feat` minor, `fix` and `style` patch.
 
+`worktree_guard` is the only fact that is about what bcp may do rather than what the repo is. It is
+per user and repo, as every fact is (the file lives in the user's memory folder), which is intended: the
+guards protect a person running Claude Code with bcp, so a committed team setting would add nothing. A
+repo that never opted in is `off` and is never blocked.
+
 `in_progress_label` asks GitHub, so only a clear single match is stored. No matching label (`none`),
 several matches, or a `gh` that does not answer are shown but not stored and asked again next time,
 because the label may be created later. A repo that is not on github.com has `none` settled

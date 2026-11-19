@@ -101,6 +101,16 @@ Docs base: `https://code.claude.com/docs/en/`
 - **CANNOT-CONFIRM:** that a plugin cannot ship `permissions.deny` (the issue's claim); how a deny rule treats a `git -C` after `&&`, `;`, `|` or inside `$(...)`.
 - **checked:** 2026-11
 
+### HK7 — PreToolUse guards: edits in the main checkout, `gh pr create` before the push (hook, #85)
+
+- **Native:** permission rules can allow, ask or deny a tool by its target, `Bash(gh pr create *)` for the command or a path rule for `Write` and `Edit`, but only on the text of the call: the syntax has no git state in it (current branch, whether this is the main checkout or a linked worktree, whether the branch has an upstream or unpushed commits). A deny rule would block every PR, or every edit under a path. The hook mechanics are those of HK4, with a `Write|Edit|NotebookEdit` matcher for the edit guard. [wildcard patterns](https://code.claude.com/docs/en/permissions.md#wildcard-patterns), [Bash rule limits](https://code.claude.com/docs/en/permissions.md#bash-rule-limits), [how a hook resolves](https://code.claude.com/docs/en/hooks.md#how-a-hook-resolves)
+- **Verdict:** NO equivalent for the git-state checks; PARTIAL for the match on the call text.
+- **fills-gap:** nothing native refuses an edit because the file is in the main checkout rather than a worktree, or a PR because the branch is not pushed. The user-level hook this replaces hard-coded one repo's path and judged the shell's directory, not the command.
+- **retire-when:** permission rules or a setting can condition on the checkout (main or linked worktree) and on a branch's push state, or native worktrees refuse edits in the main checkout while one is in use.
+- **CANNOT-CONFIRM:** the same hook points as HK4 (the version that added `if`, whether `PreToolUse` hooks run under `bypassPermissions`); the exact path-rule syntax for `Write` and `Edit` and whether a rule matches a symlinked path. Not re-read in the docs for this row.
+- **Limits, by design:** the guards guide a bcp session and nothing else. A teammate without bcp is not guarded; a rule everyone must follow belongs in branch protection, a git hook or CI. They act only where the `worktree_guard` fact is `on`. The PR guard reads local refs (the last fetch or push, no network) and judges the branch in the last `cd` target before the command; a target built from a variable or command is not judged.
+- **checked:** 2026-11
+
 ## Other native-relevant rows
 
 Rows that touch a native feature but can never retire. CG1/CG8 and HK2 were shim rows until #36 moved them here: they have no retirement condition, so the monthly shim review would only ask about them again.
