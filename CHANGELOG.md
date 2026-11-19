@@ -1,3 +1,12 @@
+# [1.15.0](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.14.0...v1.15.0) (2026-11-19)
+
+
+### Features
+
+* **context:** add the worktree_guard fact ([a2902a1](https://github.com/BANCS-Norway/bancs-claude-plugin/commit/a2902a17a3163124e04952aa1888ffe369c21e64)), closes [#85](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/85)
+* **hooks:** guard edits in the main checkout ([0af7cc3](https://github.com/BANCS-Norway/bancs-claude-plugin/commit/0af7cc305ff756724b1d95608a902d20f781c22e)), closes [#85](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/85)
+* **hooks:** guard gh pr create before the push ([91c8e8f](https://github.com/BANCS-Norway/bancs-claude-plugin/commit/91c8e8f374552d1b1fd7384a120dcc931c685f79)), closes [#85](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/85)
+
 # [1.14.0](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.13.3...v1.14.0) (2026-11-15)
 
 
