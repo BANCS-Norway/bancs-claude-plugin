@@ -71,11 +71,15 @@ Categorise each open issue:
 
 ## Step 7 — Determine memory directory
 
-The memory directory path is: `~/.claude/projects/<escaped-working-dir>/memory/`
+Ask the script for the memory folder. It comes from the main checkout, so it is the same inside a worktree:
 
-The escaped working dir is the absolute path of the repo with `/` replaced by `-` (e.g. `/home/user/github/myrepo` → `-home-user-github-myrepo`).
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/work-log.mjs" <<'ARGS'
+memory
+ARGS
+```
 
-Run `pwd` to get the current working directory, then construct the path.
+The memory directory is the `memory:` value. Every `memory/` path below means that folder.
 
 Check if the memory directory already exists. If it does, read the existing MEMORY.md and merge rather than overwrite — preserve existing feedback and reference entries.
 
