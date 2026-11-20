@@ -12,9 +12,8 @@ const skillsDir = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'skills
 
 /** Skills that may keep a literal, and why. */
 const EXEMPT = {
-  // Works on a fork against its upstream and filters `master`/`main` worktrees by name. It also writes the fork's
-  // MEMORY.md from the cwd (step 7); that is not an issue work log, and it is outside #69's six skills.
-  'setup-contribution': ['branch', 'work-log'],
+  // Works on a fork against its upstream and filters `master`/`main` worktrees by name.
+  'setup-contribution': ['branch'],
 };
 
 // `main` as a branch name. "main checkout", "main repo" and "main-repo-path" mean the primary clone.
