@@ -1,3 +1,10 @@
+## [1.15.1](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.15.0...v1.15.1) (2026-11-25)
+
+
+### Bug Fixes
+
+* **setup-contribution:** get the memory folder from work-log.mjs ([5682a23](https://github.com/BANCS-Norway/bancs-claude-plugin/commit/5682a23e016303ab62f4202dd142805e17e87dd9)), closes [#79](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/79)
+
 # [1.15.0](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.14.0...v1.15.0) (2026-11-19)
 
 
