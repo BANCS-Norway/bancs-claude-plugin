@@ -149,8 +149,9 @@ Rows that touch a native feature but can never retire. CG1/CG8 and HK2 were shim
 
 - **Native:** `/review` is a built-in alias of the bundled `/code-review` skill (2.1.223). [commands](https://code.claude.com/docs/en/commands.md) A project skill named `code-review` replaces `/code-review`, but "the bundled alias `/review` never runs your skill". [skills](https://code.claude.com/docs/en/skills.md#resolve-skills-that-share-a-name)
 - **Plugin skills** are namespaced `/<plugin>:<skill>`, so bcp's skill is `/bcp:review` and does not take over `/review`. [components](https://code.claude.com/docs/en/plugins/components.md#skills)
-- **Verdict:** the name collision the brief worried about does not occur for a plugin skill. Whether the model confuses the two in practice is still open (#39).
-- **CANNOT-CONFIRM:** what a user skill named bare `review` does.
+- **Verdict:** the name collision the brief worried about does not occur for a plugin skill.
+- **Decision (#39): keep the name `review`; no rename.** The real defect was in the skill's own text: it told the member and the user to run bare `/review` (three places), which runs the native `/code-review` alias, not this skill. Those mentions now say `/bcp:review`. No live test of model confusion was run: the namespace already prevents a registry collision, and the prose was the only place the wrong command appeared. A rename would also change the `review` step key that `/bcp:nudge` and the decay counts use. Revisit if a session is seen running native `/review` when the skill was meant.
+- **CANNOT-CONFIRM:** what a user skill named bare `review` does (not relevant to a plugin skill).
 
 ### IS8 — SessionStart running the `issues` skill
 

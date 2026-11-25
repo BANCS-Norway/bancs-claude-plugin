@@ -13,7 +13,7 @@ The skill has four distinct phases. **Do not merge them.** The voice, the stance
 
 ## Skip rule — when *not* to invoke
 
-Don't run `/review` on trivial batches. Skip when **all** of these hold:
+Don't run `/bcp:review` on trivial batches. Skip when **all** of these hold:
 
 - ≤ ~20 lines changed across the diff
 - Single file, or docs-only (`*.md`, files under `docs-internal/`, `CLAUDE.md`, `README.md`)
@@ -92,8 +92,8 @@ Pick one. Don't hedge between them.
 
 ## Operating notes
 
-- **Self-invoked by the member**, not by the user. The member runs `/review` as the last step of a non-trivial batch, presents the findings, then proposes the commit. The user reads the findings and chooses: address them first, or commit as-is.
-- The user can still invoke `/review` manually at any time — e.g. to re-check after making changes in response to findings.
+- **Self-invoked by the member**, not by the user. The member runs `/bcp:review` as the last step of a non-trivial batch, presents the findings, then proposes the commit. The user reads the findings and chooses: address them first, or commit as-is.
+- The user can still invoke `/bcp:review` manually at any time — e.g. to re-check after making changes in response to findings.
 - This skill does not change files, create commits, or touch git state beyond reading the diff.
 - Do not re-enter Rich's voice after Phase 3. The switch is part of the tool.
 - If the diff is empty (nothing staged or unstaged), say so and stop — there is nothing to review.
