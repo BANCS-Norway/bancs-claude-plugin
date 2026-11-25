@@ -135,7 +135,7 @@ The last column names the issue that carries the change, where one exists.
 | RV3 | Phase 2: Rich Hickey lens | process | None | keep | Personal process; stays. |
 | RV4 | Phase 3: recommendations with effort | process | None | keep | |
 | RV5 | Phase 4: one final line | process | None | keep | |
-| RV6 | Name and invocation (`/review`, self-invoked before commit) | process | NO collision; see native-overlap.md, RV6 | keep | #39 decides rename. Nothing makes the member run it. |
+| RV6 | Name and invocation (`/review`, self-invoked before commit) | process | NO collision; see native-overlap.md, RV6 | keep | #39: name kept; the skill's bare `/review` mentions now say `/bcp:review`. Nothing makes the member run it. |
 
 ## `setup-contribution`
 
