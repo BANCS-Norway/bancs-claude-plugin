@@ -58,10 +58,10 @@ Docs base: `https://code.claude.com/docs/en/`
 
 ### HK1 — SessionStart seeds `~/.claude/bcp/workforce.json` (hook)
 
-- **Native:** `${CLAUDE_PLUGIN_DATA}` is a directory that survives updates, created on first reference (2.1.78). The docs' own first-run pattern is a SessionStart hook that copies files into it. There is no post-install hook; a `Setup` hook fires only with `--init-only`, `--init` or `--maintenance`. [plugin paths](https://code.claude.com/docs/en/plugins/components.md#reference-plugin-paths-and-store-data), [setup](https://code.claude.com/docs/en/hooks.md#setup)
+- **Native:** `${CLAUDE_PLUGIN_DATA}` is a directory that survives updates, created on first reference (2.1.78). The docs' own first-run pattern is a SessionStart hook that copies files into it. A `userConfig` option can carry a `default`, but it is a setting value (a string, number, boolean or array of strings) that Claude Code prompts for and saves in `settings.json`; the docs don't say it can create or seed a file. There is no post-install hook; a `Setup` hook fires only with `--init-only`, or with `--init` or `--maintenance` in `-p` mode, not on plugin install. [plugin paths](https://code.claude.com/docs/en/plugins/components.md#reference-plugin-paths-and-store-data), [user configuration](https://code.claude.com/docs/en/plugins/manifest-reference.md#user-configuration), [hook lifecycle](https://code.claude.com/docs/en/hooks.md#hook-lifecycle)
 - **Verdict:** NO equivalent that removes the hook. The hook is the documented pattern. bcp writes to `~/.claude/bcp/` instead of `${CLAUDE_PLUGIN_DATA}`; moving the active workforce there is an option, not a requirement.
 - **fills-gap:** plugins have no post-install step to seed user-level data.
-- **retire-when:** Claude Code adds a post-install hook or a plugin default-data mechanism.
+- **retire-when:** Claude Code adds a post-install hook, or a plugin default-data mechanism that does the first-run seed: write the bundled workforce file where the skills read it, on install or first session, without overwriting a roster the user has switched to. A `userConfig` `default` (a value, not a file) and `${CLAUDE_PLUGIN_DATA}` (an empty directory the plugin fills itself) do not.
 - **checked:** 2026-11
 
 ### HK3 — SessionStart notices a new Claude Code version (hook, #35)
