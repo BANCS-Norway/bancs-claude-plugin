@@ -7,6 +7,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { STEPS, checkLastTurn, parseTranscript, toEvents } from './lib/process-steps.mjs';
+import { COMMITS, LED_COMMITS, LED_NOT_COMMITS, MENTIONS, NOT_COMMITS, REAL_COMMITS, lines } from './lib/commit-cases.mjs';
 
 const scripts = dirname(fileURLToPath(import.meta.url));
 const tmp = () => mkdtempSync(join(tmpdir(), 'bcp-stop-'));
@@ -132,6 +133,23 @@ test('text that merely mentions git commit is not a commit', () => {
   assert.deepEqual(check(prompt(), bash("cat > t.mjs <<'E'\nbash('cd /r && git commit -m x')\nE")), []);
   assert.equal(check(prompt(), bash('cd /r && git commit -m "feat: x"')).length, 1);
   assert.equal(check(prompt(), bash('git -C /r commit -m "feat: x"')).length, 1);
+});
+
+test('the step check agrees with the commit guard on its commit and mention cases', () => {
+  const counted = (c) => check(prompt(), bash(c)).length === 1;
+  for (const c of [...COMMITS, ...LED_COMMITS, ...REAL_COMMITS]) assert.equal(counted(c), true, c);
+  for (const c of [...NOT_COMMITS, ...LED_NOT_COMMITS, ...MENTIONS]) assert.equal(counted(c), false, c);
+});
+
+// Each of these was counted as a commit by the regex stripper that codeOf replaced (#93).
+test('a commit mentioned in a heredoc or a quoted string is not a commit', () => {
+  for (const c of [
+    lines('cat <<\\EOF > note.md', 'git commit -m x', 'EOF'),
+    lines("cat <<'END-1' > note.md", 'git commit -m x', 'END-1'),
+    lines("echo don\\'t; echo 'then run:", "git commit -m x'"),
+  ]) {
+    assert.deepEqual(check(prompt(), bash(c)), [], c);
+  }
 });
 
 test('the branch comes from git when it can be asked, not from the stale transcript field', () => {
