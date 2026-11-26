@@ -93,7 +93,7 @@ function refused(ev, cmd) {
 // large) output is never scanned.
 function isCommit(ev) {
   const cmd = bash(ev);
-  return runsCommit(cmd, { dashC: true }) && !/--dry-run/.test(cmd) && !ev.failed && !refused(ev, cmd);
+  return runsCommit(cmd, { dashC: true }) && !ev.failed && !refused(ev, cmd);
 }
 
 function wroteWorkLog(ev) {
