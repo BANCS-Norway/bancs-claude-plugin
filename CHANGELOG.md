@@ -1,3 +1,10 @@
+## [1.15.3](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.15.2...v1.15.3) (2026-11-26)
+
+
+### Bug Fixes
+
+* **stop-check:** use the commit guard's parser to tell a commit from a mention ([a1addaf](https://github.com/BANCS-Norway/bancs-claude-plugin/commit/a1addaf6b6bc2cb64293bb485fbcbcdf8f03ad8d)), closes [#93](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/93)
+
 ## [1.15.2](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.15.1...v1.15.2) (2026-11-26)
 
 
