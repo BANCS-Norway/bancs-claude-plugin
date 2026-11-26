@@ -1,8 +1,7 @@
 // Process-step checks for a finished batch. Used by the Stop hook (scripts/stop-check.mjs).
 // Pure functions: transcript text in, findings out. Steps and ids: docs/process-steps.md.
+import { runsCommit } from './shell-command.mjs';
 
-// `git commit` as a command, not as text inside a grep, echo or heredoc argument.
-const COMMIT = /(?:^|[;&|(\n])\s*(?:\w+=\S+\s+)*git\s+(?:-C\s+\S+\s+)?commit\b/;
 const TEST_RUN =
   /\b(?:npm|pnpm|yarn)\s+(?:run\s+)?test|\bnode\s+(?:\S+\s+)*--test\b|\bpytest\b|\bvitest\b|\bjest\b|\bgo\s+test\b|\bcargo\s+test\b|\bdotnet\s+test\b|\bmake\s+test\b|scripts\/test[-\w]*\.sh|\bvalidate\.mjs\b/;
 const WORK_LOG = /(?:issue-\d+\.md|issues\/\d+\/log\.md)/;
@@ -82,14 +81,6 @@ export function toEvents(entries) {
 
 const bash = (ev) => (ev.name === 'Bash' && typeof ev.input.command === 'string' ? ev.input.command : '');
 
-// The command without heredoc bodies and quoted strings, so text that mentions `git commit` (a
-// grep pattern, an echo, a file being written) is not mistaken for running it.
-function bare(cmd) {
-  return cmd
-    .replace(/<<-?\s*(['"]?)(\w+)\1[^\n]*\n[\s\S]*?\n\s*\2\b/g, '')
-    .replace(/'[^']*'|"(?:[^"\\]|\\.)*"/g, '""');
-}
-
 // A refused attempt is not a commit: it neither ends a batch nor starts the next one, so the retry
 // is judged on the whole batch since the last commit that went through.
 function refused(ev, cmd) {
@@ -102,7 +93,7 @@ function refused(ev, cmd) {
 // large) output is never scanned.
 function isCommit(ev) {
   const cmd = bash(ev);
-  return COMMIT.test(bare(cmd)) && !/--dry-run/.test(cmd) && !ev.failed && !refused(ev, cmd);
+  return runsCommit(cmd, { dashC: true }) && !/--dry-run/.test(cmd) && !ev.failed && !refused(ev, cmd);
 }
 
 function wroteWorkLog(ev) {

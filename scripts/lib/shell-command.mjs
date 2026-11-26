@@ -7,6 +7,8 @@
 // substitution inside double quotes is code, so it is kept (after a `;`) and scanned the same way.
 // It never throws: an unterminated quote or substitution just ends at the end of the command, and
 // substitutions nested deeper than MAX_DEPTH are read as plain text, so the recursion is bounded.
+//
+// `runsCommit` is the one answer to "does this run a commit?", for the guard and the Stop step check (#93).
 
 const MAX_DEPTH = 100;
 
@@ -103,7 +105,8 @@ const WORD = String.raw`[^\s;&|(){}]`;
 const START = String.raw`(?:^|[;&|({\n][ \t]*)`;
 const LEADERS = String.raw`(?:(?:then|do|else|elif|if|while|until|time|command|exec|sudo|env|xargs|nohup|!)\s+|\w+=${WORD}+\s+)*`;
 const GIT = String.raw`(?:${WORD}*/)?git\s+`;
-const GLOBAL_OPTIONS = String.raw`(?:(?:-c\s+\S+|-[pP]|--(?:git-dir|work-tree|namespace|super-prefix|config-env)\s+\S+|--[\w-]+(?:=\S+)?)\s+)*`;
+const OPTION = String.raw`-c\s+\S+|-[pP]|--(?:git-dir|work-tree|namespace|super-prefix|config-env)\s+\S+|--[\w-]+(?:=\S+)?`;
+const GLOBAL_OPTIONS = String.raw`(?:(?:${OPTION})\s+)*`;
 
 /** A RegExp for `git <global options> <tail>` in command position; `tail` is a regex source. Test it against `codeOf()` output. */
 export function gitCommandPattern(tail) {
@@ -113,4 +116,20 @@ export function gitCommandPattern(tail) {
 /** A RegExp for `gh <tail>` in command position (a path to gh, the same leaders as git); `tail` is a regex source. Test it against `codeOf()` output. */
 export function ghCommandPattern(tail) {
   return new RegExp(START + LEADERS + String.raw`(?:${WORD}*/)?gh\s+` + tail);
+}
+
+// `commit` ends at a blank or a shell separator, so `git commit;` counts and `git commit-tree` does not.
+const COMMIT_TAIL = String.raw`commit(?=[\s;&|()<>]|$)`;
+const COMMIT = gitCommandPattern(COMMIT_TAIL);
+const COMMIT_OR_DASH_C = new RegExp(START + LEADERS + GIT + String.raw`(?:(?:-C\s+\S+|${OPTION})\s+)*` + COMMIT_TAIL);
+
+/**
+ * Whether the command line runs `git commit`. `dashC` also counts `git -C <dir> commit`.
+ * The two callers differ there on purpose: the commit guard checks the repo of the shell's directory and
+ * cannot tell which repo `git -C` is about, so it leaves the form out (git-c-guard.mjs denies it first,
+ * #87). The step check only needs to know that a commit happened, so it counts it.
+ */
+export function runsCommit(command, { dashC = false } = {}) {
+  const code = codeOf(command);
+  return (dashC ? COMMIT_OR_DASH_C : COMMIT).test(code) && !/\s--help\b|\s-h\b/.test(code);
 }

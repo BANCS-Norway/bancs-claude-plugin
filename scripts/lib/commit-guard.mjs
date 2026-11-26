@@ -4,20 +4,13 @@
 // commit and what only deserves a warning. Every message names the way out. Nothing here talks to
 // the network or writes anything, and a git call that fails reads as "nothing to report".
 import { execFileSync } from 'node:child_process';
-import { codeOf, gitCommandPattern } from './shell-command.mjs';
+import { runsCommit } from './shell-command.mjs';
 
 export const LARGE_FILE_BYTES = 1024 * 1024;
 
-// `git` in command position (shell-command.mjs), then global options, then `commit`.
-// `git -C <dir> commit` is left out on purpose: git-c-guard.mjs denies it before this runs (#87).
-const COMMIT = gitCommandPattern(String.raw`commit(?=\s|$)`);
-
-// Only what the shell runs counts (shell-command.mjs): a commit message that says "-h" or "; git commit",
-// or a PR body or heredoc that mentions a commit, is not a flag or a command (#88).
-export function isCommitCommand(command) {
-  const bare = codeOf(command);
-  return COMMIT.test(bare) && !/\s--help\b|\s-h\b/.test(bare);
-}
+// Only what the shell runs counts: a commit message that says "-h" or "; git commit", or a PR body or
+// heredoc that mentions a commit, is not a flag or a command (#88). The rule is in shell-command.mjs.
+export const isCommitCommand = (command) => runsCommit(command);
 
 const run = (cwd, args, input) => {
   try {
