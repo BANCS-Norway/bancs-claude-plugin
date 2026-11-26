@@ -1,3 +1,10 @@
+## [1.15.4](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.15.3...v1.15.4) (2026-11-26)
+
+
+### Bug Fixes
+
+* **guard:** read commit flags only from the commit's own command ([41833c4](https://github.com/BANCS-Norway/bancs-claude-plugin/commit/41833c4bafacdaced991c93a873f5b69632691d0)), closes [#102](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/102)
+
 ## [1.15.3](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.15.2...v1.15.3) (2026-11-26)
 
 
