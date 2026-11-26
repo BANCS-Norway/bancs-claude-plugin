@@ -1,3 +1,10 @@
+## [1.15.2](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.15.1...v1.15.2) (2026-11-26)
+
+
+### Bug Fixes
+
+* **review:** name the skill as /bcp:review so it is not read as native /review ([d013218](https://github.com/BANCS-Norway/bancs-claude-plugin/commit/d0132185c1b23a9aa43918b64e22f592897e8d0e)), closes [#39](https://github.com/BANCS-Norway/bancs-claude-plugin/issues/39)
+
 ## [1.15.1](https://github.com/BANCS-Norway/bancs-claude-plugin/compare/v1.15.0...v1.15.1) (2026-11-25)
 
 
