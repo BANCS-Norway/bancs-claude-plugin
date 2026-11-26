@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { STEPS, checkLastTurn, parseTranscript, toEvents } from './lib/process-steps.mjs';
-import { COMMITS, LED_COMMITS, LED_NOT_COMMITS, MENTIONS, NOT_COMMITS, REAL_COMMITS, lines } from './lib/commit-cases.mjs';
+import { COMMITS, FLAG_COMMITS, FLAG_NOT_COMMITS, LED_COMMITS, LED_NOT_COMMITS, MENTIONS, NOT_COMMITS, REAL_COMMITS, lines } from './lib/commit-cases.mjs';
 
 const scripts = dirname(fileURLToPath(import.meta.url));
 const tmp = () => mkdtempSync(join(tmpdir(), 'bcp-stop-'));
@@ -137,8 +137,8 @@ test('text that merely mentions git commit is not a commit', () => {
 
 test('the step check agrees with the commit guard on its commit and mention cases', () => {
   const counted = (c) => check(prompt(), bash(c)).length === 1;
-  for (const c of [...COMMITS, ...LED_COMMITS, ...REAL_COMMITS]) assert.equal(counted(c), true, c);
-  for (const c of [...NOT_COMMITS, ...LED_NOT_COMMITS, ...MENTIONS]) assert.equal(counted(c), false, c);
+  for (const c of [...COMMITS, ...LED_COMMITS, ...REAL_COMMITS, ...FLAG_COMMITS]) assert.equal(counted(c), true, c);
+  for (const c of [...NOT_COMMITS, ...LED_NOT_COMMITS, ...MENTIONS, ...FLAG_NOT_COMMITS]) assert.equal(counted(c), false, c);
 });
 
 // Each of these was counted as a commit by the regex stripper that codeOf replaced (#93).

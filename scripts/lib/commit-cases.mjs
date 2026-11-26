@@ -30,3 +30,27 @@ export const REAL_COMMITS = [
   'echo "$(git commit -m x)"',
   lines('git commit -m x <<EOF', 'ignored', 'EOF'),
 ];
+
+// #102: --help, -h and --dry-run belong to the command they are written on.
+export const FLAG_COMMITS = [
+  'git commit -m x && ls -h',
+  'git commit -m x; df -h',
+  'git commit -m x | du -h',
+  'git commit -m x && npm publish --dry-run',
+  'git commit -m "explain --dry-run"',
+  'git commit --dry-run && git commit -m x',
+  'ls -h; git commit -m x',
+  lines('git commit -m x', 'ls --help'),
+  '(git commit -m x) && ls -h',
+  'git commit -m x # see -h',
+  'git commit -m x #1 --dry-run',
+];
+
+export const FLAG_NOT_COMMITS = [
+  'git commit --dry-run',
+  'git commit --dry-run -m x && ls',
+  'git commit -h; ls',
+  'git commit -m x 2>&1 --dry-run',
+  'git --help commit',
+  lines('git commit -m x \\', '  --dry-run'),
+];

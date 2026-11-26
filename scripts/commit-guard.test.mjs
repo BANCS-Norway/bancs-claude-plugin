@@ -7,7 +7,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isCommitCommand } from './lib/commit-guard.mjs';
 import { codeOf } from './lib/shell-command.mjs';
-import { COMMITS, LED_COMMITS, LED_NOT_COMMITS, MENTIONS, NOT_COMMITS, REAL_COMMITS, lines } from './lib/commit-cases.mjs';
+import { COMMITS, FLAG_COMMITS, FLAG_NOT_COMMITS, LED_COMMITS, LED_NOT_COMMITS, MENTIONS, NOT_COMMITS, REAL_COMMITS, lines } from './lib/commit-cases.mjs';
 import { git, repoWithOrigin, tmp } from './lib/test-repo.mjs';
 
 const script = resolve(dirname(fileURLToPath(import.meta.url)), 'commit-guard.mjs');
@@ -44,6 +44,11 @@ function stage(dir, files) {
 
 test('isCommitCommand: a separator right after commit ends the word', () => {
   for (const c of ['git commit; ls', 'git commit&& ls', '(git commit)']) assert.equal(isCommitCommand(c), true, c);
+});
+
+test('isCommitCommand reads --help, -h and --dry-run only from the commit itself', () => {
+  for (const c of FLAG_COMMITS) assert.equal(isCommitCommand(c), true, c);
+  for (const c of FLAG_NOT_COMMITS) assert.equal(isCommitCommand(c), false, c);
 });
 
 test('isCommitCommand leaves out git -C', () => {

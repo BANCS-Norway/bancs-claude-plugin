@@ -123,13 +123,26 @@ const COMMIT_TAIL = String.raw`commit(?=[\s;&|()<>]|$)`;
 const COMMIT = gitCommandPattern(COMMIT_TAIL);
 const COMMIT_OR_DASH_C = new RegExp(START + LEADERS + GIT + String.raw`(?:(?:-C\s+\S+|${OPTION})\s+)*` + COMMIT_TAIL);
 
+// Where a simple command ends: `;`, `|`, a newline, `)`, or an `&` that is not part of a redirection (`2>&1`).
+const END = /[;|\n)]|(?<![<>])&(?!>)/g;
+// The flags that make `git commit` commit nothing.
+const NO_COMMIT_FLAG = /\s(?:--help|-h|--dry-run)(?![\w-])/;
+
 /**
- * Whether the command line runs `git commit`. `dashC` also counts `git -C <dir> commit`.
+ * Whether the command line runs a `git commit` that commits: one with no `--help`, `-h` or `--dry-run`
+ * of its own. A flag of another command on the line does not count (#102). `dashC` also counts
+ * `git -C <dir> commit`.
  * The two callers differ there on purpose: the commit guard checks the repo of the shell's directory and
  * cannot tell which repo `git -C` is about, so it leaves the form out (git-c-guard.mjs denies it first,
  * #87). The step check only needs to know that a commit happened, so it counts it.
  */
 export function runsCommit(command, { dashC = false } = {}) {
-  const code = codeOf(command);
-  return (dashC ? COMMIT_OR_DASH_C : COMMIT).test(code) && !/\s--help\b|\s-h\b/.test(code);
+  const code = codeOf(command).replaceAll('\\\n', ' '); // a continued line is one line
+  const commits = code.matchAll(new RegExp(dashC ? COMMIT_OR_DASH_C : COMMIT, 'g'));
+  return [...commits].some((m) => {
+    END.lastIndex = m.index + m[0].length;
+    const end = END.exec(code)?.index ?? code.length;
+    const own = code.slice(m.index, end).split(/\s#/)[0]; // a comment is not a flag
+    return !NO_COMMIT_FLAG.test(own);
+  });
 }
