@@ -15,11 +15,11 @@ Docs base: `https://code.claude.com/docs/en/`
 
 ### WC6a — `git worktree add` (worktree-create)
 
-- **Native:** `claude --worktree <name>` and subagent `isolation: worktree`. [worktrees](https://code.claude.com/docs/en/worktrees.md#start-claude-in-a-worktree) (2.1.49, 2.1.50)
+- **Native:** `claude --worktree <name>` and subagent `isolation: worktree`. [worktrees](https://code.claude.com/docs/en/worktrees.md#start-claude-in-a-worktree) (2.1.49, 2.1.50) bcp works mid-session instead: a session is already running in the main checkout when the issue's worktree is made. The native tool for that is `EnterWorktree` ([ask Claude to create a worktree](https://code.claude.com/docs/en/worktrees.md#ask-claude-to-create-a-worktree)), which takes only `name` (a new worktree under `.claude/worktrees/` on a new branch, base from `worktree.baseRef`) or `path` (switch into an existing worktree, including one made with `git worktree add`); it has no branch or base parameter (read from the tool's definition in 2.1.332, 2026-11-26, not from the docs). There is no `/worktree` slash command in Claude Code itself (confirmed 2026-11-13).
 - **Verdict:** PARTIAL. Native creates `.claude/worktrees/<name>/` on a branch named `worktree-<name>`. `worktree.baseRef` accepts only `"fresh"` (origin's default branch) or `"head"`; the docs say "You can't set `worktree.baseRef` to a branch name." [baseRef](https://code.claude.com/docs/en/worktrees.md#choose-the-base-branch)
 - **Gap it fills:** bcp's `{type}/{NNN}_{slug}` branch names and a chosen base branch cannot be expressed natively.
 - **In code (#44):** `scripts/worktree-start.mjs`. Retiring this row means removing that step from the script, or the script and the skill's call to it.
-- **retire-when:** native worktrees accept a caller-chosen branch name, or bcp adopts `worktree-<name>` naming and the `fresh` base.
+- **retire-when:** a native `/worktree` command (or `EnterWorktree`) creates a worktree mid-session on a caller-chosen branch name and base.
 - **checked:** 2026-11
 
 ### WC9 — `node_modules` symlink or `npm ci`, and `.worktreeinclude` (worktree-create)
@@ -28,7 +28,7 @@ Docs base: `https://code.claude.com/docs/en/`
 - **Verdict:** PARTIAL. `.worktreeinclude` copies; it has no `# link:` or `## links` syntax. The brief's symlink-in-`.worktreeinclude` idea would be a bcp invention, not a native feature. `worktree.symlinkDirectories` is the native symlink route.
 - **Confirmed by experiment (#37, 2026-11-11, Claude Code 2.1.322):** in a throwaway repo ignoring `.env`, `build/` and `linked/`, with a `.worktreeinclude` naming `.env` and `build/`, `claude --worktree X` copied `.env` and `build/` and left `linked/`; with `worktree.symlinkDirectories: ["linked"]` it also symlinked `linked`. A worktree made by plain `git worktree add` got neither, with and without the setting. Neither mechanism reaches the worktrees bcp creates. The introduction version of both is still unconfirmed.
 - **In code (#44, #37):** `scripts/worktree-start.mjs`. It reads `.worktreeinclude` itself, the file native reads: [worktreeinclude.md](worktreeinclude.md).
-- **retire-when:** bcp creates worktrees through the native path (see WC6a), or native `.worktreeinclude` and `worktree.symlinkDirectories` apply to worktrees made with git.
+- **retire-when:** bcp creates worktrees through the native mid-session path (see WC6a), or native `.worktreeinclude` and `worktree.symlinkDirectories` apply to worktrees made with git.
 - **checked:** 2026-11
 
 ### WC5b — preflight before creating a worktree (worktree-create, #42)
