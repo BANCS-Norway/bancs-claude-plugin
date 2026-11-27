@@ -80,7 +80,7 @@ Docs base: `https://code.claude.com/docs/en/`
 - **fills-gap:** no native rule is conditioned on the current branch or on what is staged.
 - **retire-when:** permission rules or a setting can condition on the current branch (a protected-branch setting), and a native staged-file secret or size check ships.
 - **CANNOT-CONFIRM:** the version that added the hook `if` field; whether exit code 2 on stderr blocks a `PreToolUse` call the same way (the hook uses the JSON `deny` above instead); whether `PreToolUse` hooks run under `bypassPermissions`; whether a plugin's `hooks.json` accepts `if` and `onFailure` (`onFailure` needs 2.1.295). The rest of the changelog before 2.1.318 was not read verbatim.
-- **Not covered by the hook:** only staged content is checked, so `git commit -a` and `git commit <path>` pass unchecked. `git -C <dir> commit` never reaches it: HK6 denies every `git -C` first.
+- **Not covered by the hook:** only staged content is checked, so `git commit -a` and `git commit <path>` pass unchecked. `git -C <dir> commit` is not checked either: HK6 denies `git -C` first, with the limits listed there.
 - **checked:** 2026-11
 
 ### HK5 — SessionStart points a new session at the `issues` skill (hook, #47)
@@ -94,11 +94,12 @@ Docs base: `https://code.claude.com/docs/en/`
 
 ### HK6 — PreToolUse guard that denies every `git -C` (hook, #87)
 
-- **Native:** a user can deny the command in their own settings with `"permissions": {"deny": ["Bash(git -C *)"]}`. The issue states that a plugin cannot ship a `permissions.deny` rule, and that is why this is a hook; that claim, and whether a deny rule matches `git -C` after `&&`, `;` or `$(`, were **not re-read in the docs for this row** (see CANNOT-CONFIRM). The hook mechanics are those of HK4. [permissions](https://code.claude.com/docs/en/permissions.md#wildcard-patterns), [how a hook resolves](https://code.claude.com/docs/en/hooks.md#how-a-hook-resolves)
-- **Verdict:** PARTIAL. A user-level deny rule covers the plain command; a plugin cannot install one.
-- **fills-gap:** a plugin cannot ship a permission rule, so a repo that uses bcp has no way to deny `git -C` without each user editing their settings.
+- **Native:** a user can deny the command in their own settings with `"permissions": {"deny": ["Bash(git -C *)"]}`. A deny rule applies when any subcommand matches, after `&&`, `||`, `;`, `|`, `&` or a newline and inside a command substitution such as `$(...)`; it matches past leading `VAR=value` assignments and wrappers such as `timeout` and `nice`, and does not match inside `bash -c`. The docs call such a rule no security boundary, and do not mention backticks. The hook mechanics are those of HK4. [compound commands](https://code.claude.com/docs/en/permissions.md#compound-commands), [Bash rule limits](https://code.claude.com/docs/en/permissions.md#bash-rule-limits), [how a hook resolves](https://code.claude.com/docs/en/hooks.md#how-a-hook-resolves)
+- **Verdict:** PARTIAL. A user-level deny rule covers the command; the docs show no way for a plugin to install one.
+- **fills-gap:** the docs list no way for a plugin to ship a permission rule: no permissions file is among the plugin's [standard layout](https://code.claude.com/docs/en/plugins/manifest-reference.md#standard-layout), and an unrecognized `plugin.json` key is [stripped](https://code.claude.com/docs/en/plugins/manifest-reference.md#unrecognized-fields). So a repo that uses bcp can deny `git -C` natively only if each user adds the rule.
 - **retire-when:** a plugin can ship `permissions.deny` rules in its manifest; then replace the hook with a rule.
-- **CANNOT-CONFIRM:** that a plugin cannot ship `permissions.deny` (the issue's claim); how a deny rule treats a `git -C` after `&&`, `;`, `|` or inside `$(...)`.
+- **CANNOT-CONFIRM:** that no plugin file at all can carry permissions: the docs read (2026-11-27: permissions, and the plugins overview, create, components, loading and manifest-reference pages) neither describe one nor rule it out.
+- **Not covered by the hook:** `bash -c`, `sh -c` and `eval` strings; backticks; a wrapper with its own options (`sudo -u root`, `env -i`, `xargs -n1`); `timeout`, `nice` and `stdbuf`; an escaped or quoted `git` or `-C`. A user's deny rule covers `timeout` and `nice`, which the hook does not.
 - **checked:** 2026-11
 
 ### HK7 — PreToolUse guards: edits in the main checkout, `gh pr create` before the push (hook, #85)
